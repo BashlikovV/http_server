@@ -23,7 +23,7 @@ interface MessengerRepository {
     /**
      * [updateUsernameByToken] - function for updating username using his token
      * */
-    fun updateUsernameByToken(token: String)
+    fun updateUsernameByToken(token: String, username: String)
 
     /**
      * [getAllUsers] - function for getting all users from database
