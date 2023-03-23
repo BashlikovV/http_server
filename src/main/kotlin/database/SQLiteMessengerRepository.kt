@@ -1,6 +1,7 @@
 package database
 
 import AuthException
+import database.entities.Message
 import database.entities.Room
 import database.entities.User
 import utils.SecurityUtilsImpl
@@ -198,11 +199,23 @@ class SQLiteMessengerRepository : MessengerRepository {
         TODO("Not yet implemented")
     }
 
-    override fun getRoomByTwoUsers(user1: String, user2: String): Room? {
+    override fun getRoomByTwoUsers(user1: User, user2: User): Room? {
         TODO("Not yet implemented")
     }
 
-    override fun deleteRoomByTwoUsers(user1: String, user2: String) {
+    override fun deleteRoomByTwoUsers(user1: User, user2: User) {
+        TODO("Not yet implemented")
+    }
+
+    override fun addRoomByTwoUsers(user1: User, user2: User) {
+        TODO("Not yet implemented")
+    }
+
+    override fun addMessage(message: Message) {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteMessage(message: Message) {
         TODO("Not yet implemented")
     }
 }

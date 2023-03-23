@@ -1,5 +1,6 @@
 package database
 
+import database.entities.Message
 import database.entities.Room
 import database.entities.User
 
@@ -33,11 +34,25 @@ interface MessengerRepository {
     /**
      * [getRoomByTwoUsers] - function for getting room using two users
      * */
-    fun getRoomByTwoUsers(user1: String, user2: String): Room?
+    fun getRoomByTwoUsers(user1: User, user2: User): Room?
 
     /**
      * [deleteRoomByTwoUsers] - function for deleting room from database
      * */
-    fun deleteRoomByTwoUsers(user1: String, user2: String)
+    fun deleteRoomByTwoUsers(user1: User, user2: User)
 
+    /**
+     * [addRoomByTwoUsers] - function for adding new room in rooms table
+     * */
+    fun addRoomByTwoUsers(user1: User, user2: User)
+
+    /**
+     * [addMessage] - function for adding new message into messages table
+     * */
+    fun addMessage(message: Message)
+
+    /**
+     * [deleteMessage] - function for deleting message from messages database
+     * */
+    fun deleteMessage(message: Message)
 }
