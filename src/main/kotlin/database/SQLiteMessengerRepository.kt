@@ -137,8 +137,39 @@ class SQLiteMessengerRepository : MessengerRepository {
         return result
     }
 
-    override fun getUserByToken(token: String): User? {
-        TODO("Not yet implemented")
+    override fun getUserByToken(token: String): User {
+        var result = User()
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            val resultSet = statement.executeQuery(
+                "select * " +
+                        "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token')"
+            )
+
+            result = User(
+                id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
+                username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
+                email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
+                token = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN).toByteArray(),
+                salt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT).toByteArray(),
+                createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+            )
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
     }
 
     override fun updateUsernameByToken(token: String) {

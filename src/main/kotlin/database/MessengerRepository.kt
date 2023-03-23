@@ -18,7 +18,7 @@ interface MessengerRepository {
     /**
      * [getUserByToken] - function for getting user by his token
      * */
-    fun getUserByToken(token: String): User?
+    fun getUserByToken(token: String): User
 
     /**
      * [updateUsernameByToken] - function for updating username using his token
