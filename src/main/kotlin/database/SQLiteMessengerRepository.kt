@@ -15,7 +15,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     private lateinit var connection: Connection
 
-    private val securityUtils = SecurityUtilsImpl()
+    val securityUtils = SecurityUtilsImpl()
 
     override fun signUp(email: String, password: String, username: String) {
         try {
@@ -33,19 +33,19 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.use {
                 it.execute(
                     "insert into ${SQLiteContract.UsersTable.TABLE_NAME} (" +
-                            "${SQLiteContract.UsersTable.COLUMN_USERNAME}," +
-                            "${SQLiteContract.UsersTable.COLUMN_EMAIL}," +
-                            "${SQLiteContract.UsersTable.COLUMN_TOKEN}," +
-                            "${SQLiteContract.UsersTable.COLUMN_SALT}," +
-                            SQLiteContract.UsersTable.COLUMN_CREATED_AT +
-                            ") values (" +
-                            "'$username', '$email', '${securityUtils.bytesToString(token)}', " +
-                            "'${securityUtils.bytesToString(salt)}', '$time'"+
-                            ");"
+                        "${SQLiteContract.UsersTable.COLUMN_USERNAME}," +
+                        "${SQLiteContract.UsersTable.COLUMN_EMAIL}," +
+                        "${SQLiteContract.UsersTable.COLUMN_TOKEN}," +
+                        "${SQLiteContract.UsersTable.COLUMN_SALT}," +
+                        SQLiteContract.UsersTable.COLUMN_CREATED_AT +
+                    ") values (" +
+                        "'$username', '$email', '${securityUtils.bytesToString(token)}', " +
+                        "'${securityUtils.bytesToString(salt)}', '$time'"+
+                    ");"
                 )
             }
         } catch (e: SQLException) {
-            e.printStackTrace()
+            throw e
         } finally {
             try {
                 connection.close()
@@ -84,8 +84,8 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.use {
                 val resultSet = it.executeQuery(
                     "select ${SQLiteContract.UsersTable.COLUMN_TOKEN} " +
-                            "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                            "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}='$email';"
+                        "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}='$email';"
                 )
                 result = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)
             }
@@ -119,16 +119,16 @@ class SQLiteMessengerRepository : MessengerRepository {
                 statement.use {
                     val resultSet = it.executeQuery(
                         "select * " +
-                                "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                                "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}=('$email');"
+                            "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
+                            "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}=('$email');"
                     )
 
                     result = User(
                         id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
                         username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
                         email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
-                        token = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN).toByteArray(),
-                        salt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT).toByteArray(),
+                        token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
+                        salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
                         createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
                     )
                 }
@@ -159,8 +159,8 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.use {
                 val resultSet = it.executeQuery(
                     "select * " +
-                            "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                            "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
+                        "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
                 )
 
                 result = User(
@@ -194,8 +194,8 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.use {
                 it.execute(
                     "update ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                            "set ${SQLiteContract.UsersTable.COLUMN_USERNAME}='$username' " +
-                            "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
+                        "set ${SQLiteContract.UsersTable.COLUMN_USERNAME}='$username' " +
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
                 )
             }
         } catch (e: SQLException) {
@@ -259,9 +259,9 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.use {
                 val resultSet = it.executeQuery(
                     "select * " +
-                            "from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
-                            "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
-                            "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
+                        "from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
                 )
 
                 result = Room(
@@ -292,8 +292,8 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.use {
                 it.execute(
                     "delete from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
-                            "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
-                            "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
+                        "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
                 )
             }
         } catch (e: SQLException) {
@@ -321,11 +321,11 @@ class SQLiteMessengerRepository : MessengerRepository {
                             "${SQLiteContract.RoomsTable.COLUMN_USER_1}, " +
                             "${SQLiteContract.RoomsTable.COLUMN_USER_2}, " +
                             SQLiteContract.RoomsTable.COLUMN_TOKEN +
-                            ") values (" +
+                        ") values (" +
                             "'${securityUtils.bytesToString(user1.token)}', " +
                             "'${securityUtils.bytesToString(user2.token)}', " +
                             "'${securityUtils.bytesToString(roomToken)}'" +
-                            ");"
+                        ");"
                 )
             }
         } catch (e: SQLException) {
@@ -354,14 +354,14 @@ class SQLiteMessengerRepository : MessengerRepository {
                             "${SQLiteContract.MessagesTable.COLUMN_FILE}, " +
                             "${SQLiteContract.MessagesTable.COLUMN_OWNER}, " +
                             SQLiteContract.MessagesTable.COLUMN_TIME +
-                            ") values (" +
+                        ") values (" +
                             "'${securityUtils.bytesToString(message.room.token)}', " +
                             "'${message.image}', " +
                             "'${message.value}', " +
                             "'${securityUtils.bytesToString(message.file)}', " +
                             "'${securityUtils.bytesToString(message.owner.token)}', " +
                             "'${message.time}'" +
-                            ");"
+                        ");"
                 )
             }
         } catch (e: SQLException) {

@@ -1,19 +1,25 @@
-import database.SQLiteMessengerRepository
-import database.entities.Message
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import server.HttpContract
 import server.HttpRequest
 import server.HttpResponse
 import server.Server
-import java.util.Calendar
 
 fun main() {
-//    Server { _: HttpRequest?, _: HttpResponse? ->
-//        "<html><body><h1>Hello, http_server!</h1></body></html>"
-//    }.bootstrap()
+    Server { request: HttpRequest?, response: HttpResponse? ->
+        when(request?.url?.substringBefore("?")?.substringAfter("/")) {
+            HttpContract.UrlMethods.SIGN_UP -> {
+                response?.handleSignUpRequest(request = request)
+            }
+            HttpContract.UrlMethods.SIGN_IN -> {
+                response?.handleSignInRequest(request = request)
+            }
+            HttpContract.UrlMethods.ROOM_MESSAGES -> {
+                response?.handleGetRoomMessagesRequest(request = request)
+            }
+            else -> { "Error" }
+        }
+    }.bootstrap()
 
-    val messengerRepository = SQLiteMessengerRepository()
+//    val messengerRepository = SQLiteMessengerRepository()
 //    val result = messengerRepository.signIn(
 //        email = "newuser@gmail.com",
 //        password = "newuser"
@@ -36,17 +42,17 @@ fun main() {
 
 //    val result = messengerRepository.getAllUsers()
 
-    val user1 = messengerRepository.getUserByToken("8rX3Wt3FYRbcnlGM1aZy2qbCrWY=")
-    val user2 = messengerRepository.getUserByToken("l3l0P+IRei8FNuTuP56F5Gnl0T0=")
+//    val user1 = messengerRepository.getUserByToken("MTm4NuLnbvRXmATDfFuvN9Qhc9M=")
+//    val user2 = messengerRepository.getUserByToken("I88/J9VXbL/MWmBvag0YJZPFa5k=")
 //    messengerRepository.addRoomByTwoUsers(
 //        user1 = user1,
 //        user2 = user2
 //    )
 
-    val room = messengerRepository.getRoomByTwoUsers(
-        user1 = user1,
-        user2 = user2
-    )
+//    val room = messengerRepository.getRoomByTwoUsers(
+//        user1 = user1,
+//        user2 = user2
+//    )
 //    println(result.toString())
 
 //    messengerRepository.deleteRoomByTwoUsers(
