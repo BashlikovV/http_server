@@ -8,8 +8,8 @@ class HttpRequest(
 
     private val method: HttpMethod
     val url: String
-    val headers: Map<String, String>
-    private val body: String
+    private val headers: Map<String, String>
+    val body: String
 
     companion object {
         private const val DELIMITER = "\r\n\r\n"
