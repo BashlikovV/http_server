@@ -11,7 +11,6 @@ import java.sql.SQLException
 import java.sql.Statement
 import java.util.*
 
-
 class SQLiteMessengerRepository : MessengerRepository {
 
     private lateinit var connection: Connection
@@ -92,6 +91,17 @@ class SQLiteMessengerRepository : MessengerRepository {
         return securityUtils.stringToBytes(result)
     }
 
+    private fun checkEmailAndPassword(email: String, password: String, statement: Statement): Boolean {
+        val salt = getUserSaltByEmail(email, statement)
+        val token = securityUtils.passwordToHash(
+            password = password.toCharArray(),
+            salt = salt
+        )
+        val tableUserToken = getUserTokenByEmail(email)
+
+        return token.contentEquals(tableUserToken)
+    }
+
     override fun signIn(email: String, password: String): User {
         var result = User()
 
@@ -100,14 +110,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
-            val salt = getUserSaltByEmail(email, statement)
-            val token = securityUtils.passwordToHash(
-                password = password.toCharArray(),
-                salt = salt
-            )
-            val tableUserToken = getUserTokenByEmail(email)
-
-            if (token.contentEquals(tableUserToken)) {
+            if (checkEmailAndPassword(email, password, statement)) {
                 val resultSet = statement.executeQuery(
                     "select * " +
                         "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
@@ -195,8 +198,41 @@ class SQLiteMessengerRepository : MessengerRepository {
         }
     }
 
-    override fun getAllUsers(): List<User>? {
-        TODO("Not yet implemented")
+    override fun getAllUsers(): List<User> {
+        val result = mutableListOf<User>()
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            val resultSet = statement.executeQuery(
+                "select * from ${SQLiteContract.UsersTable.TABLE_NAME}"
+            )
+
+            while (resultSet.next()) {
+                result.add(
+                    User(
+                        id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
+                        username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
+                        email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
+                        token = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN).toByteArray(),
+                        salt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT).toByteArray(),
+                        createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                    )
+                )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
     }
 
     override fun getRoomByTwoUsers(user1: User, user2: User): Room? {
