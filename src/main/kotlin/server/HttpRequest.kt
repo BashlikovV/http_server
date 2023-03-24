@@ -7,8 +7,8 @@ class HttpRequest(
 ) {
 
     private val method: HttpMethod
-    private val url: String
-    private val headers: Map<String, String>
+    val url: String
+    val headers: Map<String, String>
     private val body: String
 
     companion object {
@@ -27,7 +27,7 @@ class HttpRequest(
 
         val map = mutableMapOf<String, String>()
         for (i in 1 until headers.size) {
-            val  headerPart = headers[i].split(delimiters = arrayOf(HEADER_DELIMITER), ignoreCase = true, limit = 2)
+            val headerPart = headers[i].split(delimiters = arrayOf(HEADER_DELIMITER), ignoreCase = true, limit = 2)
             map[headerPart.first().trim()] = headerPart[1].trim()
         }
         this.headers = Collections.unmodifiableMap(map)
