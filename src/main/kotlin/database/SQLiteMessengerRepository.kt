@@ -32,15 +32,17 @@ class SQLiteMessengerRepository : MessengerRepository {
 
             statement.execute(
                 "insert into ${SQLiteContract.UsersTable.TABLE_NAME} (" +
-                    "${SQLiteContract.UsersTable.COLUMN_USERNAME}," +
-                    "${SQLiteContract.UsersTable.COLUMN_EMAIL}," +
-                    "${SQLiteContract.UsersTable.COLUMN_TOKEN}," +
-                    "${SQLiteContract.UsersTable.COLUMN_SALT}," +
-                    "${SQLiteContract.UsersTable.COLUMN_CREATED_AT}) values(" +
+                        "${SQLiteContract.UsersTable.COLUMN_USERNAME}," +
+                        "${SQLiteContract.UsersTable.COLUMN_EMAIL}," +
+                        "${SQLiteContract.UsersTable.COLUMN_TOKEN}," +
+                        "${SQLiteContract.UsersTable.COLUMN_SALT}," +
+                        SQLiteContract.UsersTable.COLUMN_CREATED_AT +
+                    ") values (" +
                         "'$username', '$email', '${securityUtils.bytesToString(token)}', " +
                         "'${securityUtils.bytesToString(salt)}', '$time'"+
-                    ")"
+                    ");"
             )
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -59,7 +61,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             val resultSet = statement.executeQuery(
                 "select ${SQLiteContract.UsersTable.COLUMN_SALT} " +
                     "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                    "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}='$email'"
+                    "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}='$email';"
             )
 
             result = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)
@@ -81,9 +83,10 @@ class SQLiteMessengerRepository : MessengerRepository {
             val resultSet = statement.executeQuery(
                 "select ${SQLiteContract.UsersTable.COLUMN_TOKEN} " +
                     "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                    "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}='$email'"
+                    "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}='$email';"
             )
             result = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         }
@@ -114,7 +117,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                 val resultSet = statement.executeQuery(
                     "select * " +
                         "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                        "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}=('$email')"
+                        "where ${SQLiteContract.UsersTable.COLUMN_EMAIL}=('$email');"
                 )
 
                 result = User(
@@ -125,6 +128,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                     salt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT).toByteArray(),
                     createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
                 )
+                statement.close()
             } else {
                 throw AuthException()
             }
@@ -152,7 +156,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             val resultSet = statement.executeQuery(
                 "select * " +
                         "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token')"
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
             )
 
             result = User(
@@ -163,6 +167,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                 salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
                 createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
             )
+            //
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -185,8 +191,9 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.execute(
                 "update ${SQLiteContract.UsersTable.TABLE_NAME} " +
                         "set ${SQLiteContract.UsersTable.COLUMN_USERNAME}='$username' " +
-                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token')"
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
             )
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -207,7 +214,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.queryTimeout = 30
 
             val resultSet = statement.executeQuery(
-                "select * from ${SQLiteContract.UsersTable.TABLE_NAME}"
+                "select * from ${SQLiteContract.UsersTable.TABLE_NAME};"
             )
 
             while (resultSet.next()) {
@@ -216,12 +223,13 @@ class SQLiteMessengerRepository : MessengerRepository {
                         id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
                         username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
                         email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
-                        token = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN).toByteArray(),
-                        salt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT).toByteArray(),
+                        token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
+                        salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
                         createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
                     )
                 )
             }
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -235,7 +243,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         return result
     }
 
-    override fun getRoomByTwoUsers(user1: User, user2: User): Room? {
+    override fun getRoomByTwoUsers(user1: User, user2: User): Room {
         var result = Room()
 
         try {
@@ -247,14 +255,15 @@ class SQLiteMessengerRepository : MessengerRepository {
                 "select * " +
                     "from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
                     "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
-                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}'"
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
             )
 
             result = Room(
                 user1 = getUserByToken(resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_1)),
                 user2 = getUserByToken(resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_2)),
-                token = resultSet.getString(SQLiteContract.RoomsTable.COLUMN_TOKEN)
+                token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.RoomsTable.COLUMN_TOKEN))
             )
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -277,8 +286,9 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.execute(
                 "delete from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
                         "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
-                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}'"
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
             )
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -307,8 +317,9 @@ class SQLiteMessengerRepository : MessengerRepository {
                         "'${securityUtils.bytesToString(user1.token)}', " +
                         "'${securityUtils.bytesToString(user2.token)}', " +
                         "'${securityUtils.bytesToString(roomToken)}'" +
-                    ")"
+                    ");"
             )
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {
@@ -327,8 +338,23 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.queryTimeout = 30
 
             statement.execute(
-                ""
+                "insert into ${SQLiteContract.MessagesTable.TABLE_NAME} (" +
+                        "${SQLiteContract.MessagesTable.COLUMN_ROOM}, " +
+                        "${SQLiteContract.MessagesTable.COLUMN_IMAGE}, " +
+                        "${SQLiteContract.MessagesTable.COLUMN_VALUE}, " +
+                        "${SQLiteContract.MessagesTable.COLUMN_FILE}, " +
+                        "${SQLiteContract.MessagesTable.COLUMN_OWNER}, " +
+                        SQLiteContract.MessagesTable.COLUMN_TIME +
+                    ") values (" +
+                        "'${securityUtils.bytesToString(message.room.token)}', " +
+                        "'${message.image}', " +
+                        "'${message.value}', " +
+                        "'${message.file}', " +
+                        "'${securityUtils.bytesToString(message.owner.token)}', " +
+                        "'${message.time}'" +
+                    ");"
             )
+            statement.close()
         } catch (e: SQLException) {
             e.printStackTrace()
         } finally {

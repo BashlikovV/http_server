@@ -24,7 +24,6 @@ object SQLiteContract {
     object MessagesTable {
         const val TABLE_NAME = "messages"
         const val COLUMN_ROOM = "room"
-        const val COLUMN_IS_IMAGE = "isImage"
         const val COLUMN_IMAGE = "image"
         const val COLUMN_VALUE = "value"
         const val COLUMN_FILE = "file"

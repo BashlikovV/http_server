@@ -1,10 +1,12 @@
 import database.SQLiteMessengerRepository
+import database.entities.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import server.HttpRequest
 import server.HttpResponse
 import server.Server
+import java.util.Calendar
 
 fun main() {
 //    Server { _: HttpRequest?, _: HttpResponse? ->
@@ -34,21 +36,32 @@ fun main() {
 
 //    val result = messengerRepository.getAllUsers()
 
-//    val user1 = messengerRepository.getUserByToken("8rX3Wt3FYRbcnlGM1aZy2qbCrWY=")
-//    val user2 = messengerRepository.getUserByToken("l3l0P+IRei8FNuTuP56F5Gnl0T0=")
+    val user1 = messengerRepository.getUserByToken("8rX3Wt3FYRbcnlGM1aZy2qbCrWY=")
+    val user2 = messengerRepository.getUserByToken("l3l0P+IRei8FNuTuP56F5Gnl0T0=")
 //    messengerRepository.addRoomByTwoUsers(
 //        user1 = user1,
 //        user2 = user2
 //    )
 
-//    val result = messengerRepository.getRoomByTwoUsers(
-//        user1 = messengerRepository.getUserByToken("8rX3Wt3FYRbcnlGM1aZy2qbCrWY="),
-//        user2 = messengerRepository.getUserByToken("l3l0P+IRei8FNuTuP56F5Gnl0T0=")
-//    )
+    val room = messengerRepository.getRoomByTwoUsers(
+        user1 = user1,
+        user2 = user2
+    )
 //    println(result.toString())
 
 //    messengerRepository.deleteRoomByTwoUsers(
 //        user1 = messengerRepository.getUserByToken("8rX3Wt3FYRbcnlGM1aZy2qbCrWY="),
 //        user2 = messengerRepository.getUserByToken("l3l0P+IRei8FNuTuP56F5Gnl0T0=")
 //    )
+
+    messengerRepository.addMessage(
+        message = Message(
+            room = room,
+            image = "image_uri",
+            value = "test_message_0",
+            file = byteArrayOf(0, 1, 2, 3, 4, 5),
+            owner = user1,
+            time = Calendar.getInstance().time.toString()
+        )
+    )
 }

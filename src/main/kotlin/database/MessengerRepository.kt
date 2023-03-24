@@ -34,7 +34,7 @@ interface MessengerRepository {
     /**
      * [getRoomByTwoUsers] - function for getting room using two users
      * */
-    fun getRoomByTwoUsers(user1: User, user2: User): Room?
+    fun getRoomByTwoUsers(user1: User, user2: User): Room
 
     /**
      * [deleteRoomByTwoUsers] - function for deleting room from database
