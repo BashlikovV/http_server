@@ -55,4 +55,9 @@ interface MessengerRepository {
      * [deleteMessage] - function for deleting message from messages database
      * */
     fun deleteMessage(message: Message)
+
+    /**
+     * [getMessagesByRoom] - function for getting all messages between users into room
+     * */
+    fun getMessagesByRoom(room: Room): List<Message>
 }
