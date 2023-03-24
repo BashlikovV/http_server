@@ -2,6 +2,7 @@ package server
 
 import com.google.gson.Gson
 import database.SQLiteMessengerRepository
+import server.entities.*
 
 class HttpResponse {
 
@@ -56,61 +57,76 @@ class HttpResponse {
 
     /**
      * POST /sign-up
-     * -H "email: <email>"
-     * -H "username: <username>"
-     * -H "password: <password>"
+     * {
+     *      "username":"<username>"
+     *      "email":"<email>",
+     *      "password":"<password>"
+     * }
      * */
     fun handleSignUpRequest(request: HttpRequest): String {
         return try {
-            messengerRepository.signUp(
-                email = request.headers["email"] ?: "",
-                username = request.headers["username"] ?: "",
-                password = request.headers["password"] ?: ""
+            val body = Gson().fromJson(
+                request.body,
+                SignUpRequestBody::class.java
             )
-            setBody("result: OK")
-            message()
+
+            messengerRepository.signUp(
+                email = body.email,
+                username = body.username,
+                password = body.password
+            )
+            Gson().toJson(SignInResponseBody("200 OK"))
         } catch (e: Exception) {
-            statusCode = 500
-            status = "Error, can not create user"
-            message()
+            Gson().toJson(SignInResponseBody("500 ERROR"))
         }
     }
 
     /**
      * POST /sign-in
-     * -H "email: <email>"
-     * -H "password: <password>"
+     * {
+     *      "email":"<email>",
+     *      "password":"<password>"
+     * }
      * */
     fun handleSignInRequest(request: HttpRequest): String {
         return try {
+            val body = Gson().fromJson(
+                request.body,
+                SignInRequestBody::class.java
+            )
+
             val user = messengerRepository.signIn(
-                email = request.headers["email"] ?: "",
-                password = request.headers["password"] ?: ""
+                email = body.email,
+                password = body.password
             )
             val token = messengerRepository.securityUtils.bytesToString(user.token)
-            setBody("token: $token")
-            message()
+            Gson().toJson(SignInResponseBody(token))
         } catch (e: Exception) {
-            statusCode = 500
-            status = "Error, can not create user"
-            message()
+            Gson().toJson(SignInResponseBody("500 ERROR"))
         }
     }
 
     /**
      * POST /room-messages
-     * -H "user1: <user_token>"
-     * -H "user2: <user_token>"
+     * {
+     *      "user1":"<user_token>"
+     *      "user2":"<user_token>"
+     * }
      * */
     fun handleGetRoomMessagesRequest(request: HttpRequest): String {
         var result = ""
 
         try {
+            val body = Gson().fromJson(
+                request.body,
+                RoomMessagesRequestBody::class.java
+            )
+
             val user1 = messengerRepository.getUserByToken(
-                token = request.headers["user1"] ?: ""
+                token = body.user1
             )
             val user2 = messengerRepository.getUserByToken(
-                token = request.headers["user2"] ?: ""
+                token = body.user2
             )
             val room = messengerRepository.getRoomByTwoUsers(
                 user1 = user1,
@@ -118,11 +134,9 @@ class HttpResponse {
             )
             val messages = messengerRepository.getMessagesByRoom(room)
 
-            result = Gson().toJson(messages)
+            result = Gson().toJson(RoomMessagesResponseBody(messages))
         } catch (e: Exception) {
-            statusCode = 500
-            status = "Error, can not get messages"
-            message()
+            Gson().toJson(RoomMessagesResponseBody(listOf()))
         }
 
         return result
