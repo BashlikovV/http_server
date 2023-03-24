@@ -29,12 +29,12 @@ interface MessengerRepository {
     /**
      * [getAllUsers] - function for getting all users from database
      * */
-    fun getAllUsers(): List<User>?
+    fun getAllUsers(): List<User>
 
     /**
      * [getRoomByTwoUsers] - function for getting room using two users
      * */
-    fun getRoomByTwoUsers(user1: User, user2: User): Room?
+    fun getRoomByTwoUsers(user1: User, user2: User): Room
 
     /**
      * [deleteRoomByTwoUsers] - function for deleting room from database
