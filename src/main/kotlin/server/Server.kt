@@ -1,5 +1,6 @@
 package server
 
+import Repository
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
@@ -9,8 +10,6 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeoutException
-import kotlin.concurrent.thread
-import kotlin.jvm.Throws
 
 class Server(
     private val handler: HttpHandler?
@@ -25,7 +24,7 @@ class Server(
     fun bootstrap() {
         try {
             server = AsynchronousServerSocketChannel.open()
-            server.bind(InetSocketAddress(8080))
+            server.bind(InetSocketAddress(Repository.IP_ADDRESS, Repository.PORT))
             while (true) {
                 val future = server.accept()
                 handleClient(future)
