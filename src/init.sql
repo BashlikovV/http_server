@@ -17,7 +17,6 @@ CREATE TABLE rooms (
 
 CREATE TABLE messages (
     room        TEXT NOT NULL,
-    isImage     INTEGER NOT NULL,
     image       TEXT,
     value       TEXT,
     file        BLOB,

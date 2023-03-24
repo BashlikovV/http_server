@@ -159,8 +159,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                 id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
                 username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
                 email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
-                token = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN).toByteArray(),
-                salt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT).toByteArray(),
+                token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
+                salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
                 createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
             )
         } catch (e: SQLException) {
@@ -236,19 +236,108 @@ class SQLiteMessengerRepository : MessengerRepository {
     }
 
     override fun getRoomByTwoUsers(user1: User, user2: User): Room? {
-        TODO("Not yet implemented")
+        var result = Room()
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            val resultSet = statement.executeQuery(
+                "select * " +
+                    "from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
+                    "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}'"
+            )
+
+            result = Room(
+                user1 = getUserByToken(resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_1)),
+                user2 = getUserByToken(resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_2)),
+                token = resultSet.getString(SQLiteContract.RoomsTable.COLUMN_TOKEN)
+            )
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
     }
 
     override fun deleteRoomByTwoUsers(user1: User, user2: User) {
-        TODO("Not yet implemented")
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.execute(
+                "delete from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}'"
+            )
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     override fun addRoomByTwoUsers(user1: User, user2: User) {
-        TODO("Not yet implemented")
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            val roomToken = user1.token + user2.token
+
+            statement.execute(
+                "insert into ${SQLiteContract.RoomsTable.TABLE_NAME} (" +
+                        "${SQLiteContract.RoomsTable.COLUMN_USER_1}, " +
+                        "${SQLiteContract.RoomsTable.COLUMN_USER_2}, " +
+                        SQLiteContract.RoomsTable.COLUMN_TOKEN +
+                    ") values (" +
+                        "'${securityUtils.bytesToString(user1.token)}', " +
+                        "'${securityUtils.bytesToString(user2.token)}', " +
+                        "'${securityUtils.bytesToString(roomToken)}'" +
+                    ")"
+            )
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     override fun addMessage(message: Message) {
-        TODO("Not yet implemented")
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.execute(
+                ""
+            )
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     override fun deleteMessage(message: Message) {
