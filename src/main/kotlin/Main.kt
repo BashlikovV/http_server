@@ -54,14 +54,25 @@ fun main() {
 //        user2 = messengerRepository.getUserByToken("l3l0P+IRei8FNuTuP56F5Gnl0T0=")
 //    )
 
-    messengerRepository.addMessage(
-        message = Message(
-            room = room,
-            image = "image_uri",
-            value = "test_message_0",
-            file = byteArrayOf(0, 1, 2, 3, 4, 5),
-            owner = user1,
-            time = Calendar.getInstance().time.toString()
-        )
-    )
+//    messengerRepository.addMessage(
+//        message = Message(
+//            room = room,
+//            image = "image_uri_2",
+//            value = "test_message_1",
+//            file = byteArrayOf(0, 1, 2, 3, 4, 5),
+//            owner = user1,
+//            time = Calendar.getInstance().time.toString()
+//        )
+//    )
+
+//    messengerRepository.deleteMessage(
+//        message = Message(
+//            room = room,
+//            image = "image_uri_2",
+//            value = "test_message_1",
+//            file = byteArrayOf(0, 1, 2, 3, 4, 5),
+//            owner = user1,
+//            time = "Fri Mar 24 13:53:36 MSK 2023"
+//        )
+//    )
 }

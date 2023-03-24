@@ -358,7 +358,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                             "'${securityUtils.bytesToString(message.room.token)}', " +
                             "'${message.image}', " +
                             "'${message.value}', " +
-                            "'${message.file}', " +
+                            "'${securityUtils.bytesToString(message.file)}', " +
                             "'${securityUtils.bytesToString(message.owner.token)}', " +
                             "'${message.time}'" +
                             ");"
@@ -376,6 +376,34 @@ class SQLiteMessengerRepository : MessengerRepository {
     }
 
     override fun deleteMessage(message: Message) {
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                it.execute(
+                    "delete from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(message.room.token)}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}='${securityUtils.bytesToString(message.owner.token)}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${securityUtils.bytesToString(message.file)}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_TIME}='${message.time}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}='${message.value}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_IMAGE}='${message.image}';"
+                )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override fun getMessagesByRoom(room: Room): List<Message> {
         TODO("Not yet implemented")
     }
 }
