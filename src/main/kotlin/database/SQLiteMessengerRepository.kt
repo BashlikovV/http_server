@@ -404,6 +404,44 @@ class SQLiteMessengerRepository : MessengerRepository {
     }
 
     override fun getMessagesByRoom(room: Room): List<Message> {
-        TODO("Not yet implemented")
+        val result = mutableListOf<Message>()
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "select * from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(room.token)}';"
+                )
+
+                while (resultSet.next()) {
+                    result.add(
+                        Message(
+                            room = room,
+                            image = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_IMAGE),
+                            value = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_VALUE),
+                            file = securityUtils.stringToBytes(
+                                resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FILE)
+                            ),
+                            owner = getUserByToken(resultSet.getString(SQLiteContract.MessagesTable.COLUMN_OWNER)),
+                            time = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_TIME)
+                        )
+                    )
+                }
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
     }
 }

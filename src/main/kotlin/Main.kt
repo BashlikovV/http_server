@@ -57,8 +57,8 @@ fun main() {
 //    messengerRepository.addMessage(
 //        message = Message(
 //            room = room,
-//            image = "image_uri_2",
-//            value = "test_message_1",
+//            image = "image_uri_3",
+//            value = "test_message_3",
 //            file = byteArrayOf(0, 1, 2, 3, 4, 5),
 //            owner = user1,
 //            time = Calendar.getInstance().time.toString()
@@ -75,4 +75,11 @@ fun main() {
 //            time = "Fri Mar 24 13:53:36 MSK 2023"
 //        )
 //    )
+
+//    val messages = messengerRepository.getMessagesByRoom(
+//        room = room
+//    )
+//    messages.forEach {
+//        println(it.value)
+//    }
 }
