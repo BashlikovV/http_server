@@ -1,10 +1,7 @@
-import database.SQLiteMessengerRepository
-import database.entities.Message
 import server.HttpContract
 import server.HttpRequest
 import server.HttpResponse
 import server.Server
-import java.util.*
 
 fun main() {
     Server { request: HttpRequest?, response: HttpResponse? ->
@@ -46,7 +43,7 @@ fun main() {
 //    val result = messengerRepository.getAllUsers()
 
 //    val user1 = messengerRepository.getUserByToken("MTm4NuLnbvRXmATDfFuvN9Qhc9M=")
-//    val user2 = messengerRepository.getUserByToken("XWYIOnpXkx6m41n10l52lo4ztAQ=")
+//    val user2 = messengerRepository.getUserByToken("I88/J9VXbL/MWmBvag0YJZPFa5k=")
 //    messengerRepository.addRoomByTwoUsers(
 //        user1 = user1,
 //        user2 = user2
