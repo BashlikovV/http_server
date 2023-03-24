@@ -3,30 +3,25 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import sun.security.util.Password
+import server.entities.RoomMessagesRequestBody
+import server.entities.RoomMessagesResponseBody
 
-data class SignInRequestBody(
-    val email: String,
-    val password: String
-)
-
-data class SignInResponseBody(
-    val token: String
-)
 
 val contentType = "application/json; charset=utf-8".toMediaType()
 
 fun main() {
     val client = OkHttpClient.Builder().build()
 
-    val requestBodyString = Gson().toJson(SignInRequestBody(
-        email = "test_mail@gmail.com",
-        password = "test_password"
-    )).toRequestBody(contentType)
+    val requestBodyString = Gson().toJson(
+        RoomMessagesRequestBody(
+            user1 = "MTm4NuLnbvRXmATDfFuvN9Qhc9M=",
+            user2 = "I88/J9VXbL/MWmBvag0YJZPFa5k="
+        )
+    ).toRequestBody(contentType)
 
     val request = Request.Builder()
         .post(requestBodyString)
-        .url("http://${Repository.IP_ADDRESS}:${Repository.PORT}/sign-in")
+        .url("http://${Repository.IP_ADDRESS}:${Repository.PORT}/room-messages")
         .build()
 
     val call = client.newCall(request)
@@ -37,9 +32,11 @@ fun main() {
         val responseBodyString = response.body!!.string()
         val signInResponseBody = Gson().fromJson(
             responseBodyString,
-            SignInResponseBody::class.java
+            RoomMessagesResponseBody::class.java
         )
-        println(signInResponseBody.token)
+        signInResponseBody.messages.forEach {
+            println("${it.value} -> ${it.time}")
+        }
     } else {
         throw IllegalArgumentException()
     }
