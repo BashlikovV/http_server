@@ -42,9 +42,9 @@ interface MessengerRepository {
     fun deleteRoomByTwoUsers(user1: User, user2: User)
 
     /**
-     * [addRoomByTwoUsers] - function for adding new room in rooms table
+     * [addRoomByTwoUsers] - function for adding new room in rooms table. Returns new room token
      * */
-    fun addRoomByTwoUsers(user1: User, user2: User)
+    fun addRoomByTwoUsers(user1: User, user2: User): ByteArray
 
     /**
      * [addMessage] - function for adding new message into messages table
@@ -60,4 +60,9 @@ interface MessengerRepository {
      * [getMessagesByRoom] - function for getting all messages between users into room
      * */
     fun getMessagesByRoom(room: Room): List<Message>
+
+    /**
+     * [getRoomsByUser] - function for getting rooms of user
+     * */
+    fun getRoomsByUser(user: User): List<Room>
 }
