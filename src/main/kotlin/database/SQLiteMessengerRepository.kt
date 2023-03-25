@@ -307,13 +307,15 @@ class SQLiteMessengerRepository : MessengerRepository {
         }
     }
 
-    override fun addRoomByTwoUsers(user1: User, user2: User) {
+    override fun addRoomByTwoUsers(user1: User, user2: User): ByteArray {
+        var roomToken = byteArrayOf()
+
         try {
             connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
-            val roomToken = user1.token + user2.token
+            roomToken = user1.token + user2.token
 
             statement.use {
                 it.execute(
@@ -337,6 +339,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                 e.printStackTrace()
             }
         }
+
+        return roomToken
     }
 
     override fun addMessage(message: Message) {
@@ -428,6 +432,50 @@ class SQLiteMessengerRepository : MessengerRepository {
                             ),
                             owner = getUserByToken(resultSet.getString(SQLiteContract.MessagesTable.COLUMN_OWNER)),
                             time = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_TIME)
+                        )
+                    )
+                }
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
+    }
+
+    override fun getRoomsByUser(user: User): List<Room> {
+        val result = mutableListOf<Room>()
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "select * from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
+                            "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user.token)}' " +
+                            "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user.token)}';"
+                )
+
+                while (resultSet.next()) {
+                    result.add(
+                        Room(
+                            user1 = getUserByToken(
+                                resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_1)
+                            ),
+                            user2 = getUserByToken(
+                                resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_2)
+                            ),
+                            token = securityUtils.stringToBytes(
+                                resultSet.getString(SQLiteContract.RoomsTable.COLUMN_TOKEN)
+                            )
                         )
                     )
                 }

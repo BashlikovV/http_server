@@ -2,7 +2,9 @@ package server
 
 import com.google.gson.Gson
 import database.SQLiteMessengerRepository
+import database.entities.Message
 import server.entities.*
+import utils.SecurityUtilsImpl
 
 class HttpResponse {
 
@@ -140,5 +142,98 @@ class HttpResponse {
         }
 
         return result
+    }
+
+    /**
+     * POST /get-rooms
+     * {
+     *      "user":"<user_token>"
+     * }
+     * */
+    fun handleGetRoomsRequest(request: HttpRequest): String {
+        var result = ""
+
+        try {
+            val body = Gson().fromJson(
+                request.body,
+                GetRoomsRequestBody::class.java
+            )
+
+            val user = messengerRepository.getUserByToken(body.user)
+
+            val rooms = messengerRepository.getRoomsByUser(user)
+            result = Gson().toJson(GetRoomsResponseBody(rooms))
+        } catch (e: Exception) {
+            Gson().toJson(GetRoomsResponseBody(listOf()))
+        }
+
+        return result
+    }
+
+    /**
+     * POST /add-room
+     * {
+     *      "user1":"<user_token>",
+     *      "user2":"<user_token>"
+     * }
+     * */
+    fun handleAddRoomRequest(request: HttpRequest): String {
+        var result = ""
+
+        try {
+            val body = Gson().fromJson(
+                request.body,
+                AddRoomRequestBody::class.java
+            )
+
+            val user1 = messengerRepository.getUserByToken(body.user1)
+            val user2 = messengerRepository.getUserByToken(body.user2)
+
+            val token = messengerRepository.addRoomByTwoUsers(user1, user2)
+
+            result = Gson().toJson(AddRoomResponseBody(token = SecurityUtilsImpl().bytesToString(token)))
+        } catch (e: Exception) {
+            result = Gson().toJson(AddRoomResponseBody("ERROR"))
+        }
+
+        return result
+    }
+
+    /**
+     * POST /add-message
+     * {
+     *      "image":"<image>",
+     *      "file":"<file>",
+     *      "value": "<value>",
+     *      "time":"<time>",
+     *      "owner":"<user_token>",
+     *      "receiver":"<user_token>"
+     * }
+     * */
+    fun handleAddMessageRequest(request: HttpRequest): String {
+        var result = ""
+
+        try {
+            val body = Gson().fromJson(
+                request.body,
+                AddMessageRequestBody::class.java
+            )
+
+            val user1 = messengerRepository.getUserByToken(body.owner)
+            val user2 = messengerRepository.getUserByToken(body.receiver)
+
+            messengerRepository.addMessage(Message(
+                room = messengerRepository.getRoomByTwoUsers(user1, user2),
+                image = body.image,
+                value = body.value,
+                file = body.file.toByteArray(),
+                time = body.time
+            ))
+            result = Gson().toJson(AddMessageResponseBody("200 OK"))
+        } catch (e: Exception) {
+            result = Gson().toJson(AddMessageResponseBody("ERROR"))
+        }
+
+        return  result
     }
 }

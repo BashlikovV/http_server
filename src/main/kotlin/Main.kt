@@ -15,6 +15,15 @@ fun main() {
             HttpContract.UrlMethods.ROOM_MESSAGES -> {
                 response?.handleGetRoomMessagesRequest(request = request)
             }
+            HttpContract.UrlMethods.GET_ROOMS -> {
+                response?.handleGetRoomsRequest(request = request)
+            }
+            HttpContract.UrlMethods.ADD_ROOM -> {
+                response?.handleAddRoomRequest(request = request)
+            }
+            HttpContract.UrlMethods.ADD_MESSAGE -> {
+                response?.handleAddMessageRequest(request = request)
+            }
             else -> { "Error" }
         }
     }.bootstrap()
@@ -88,4 +97,7 @@ fun main() {
 //    messages.forEach {
 //        println(it.value)
 //    }
+
+//    val user = messengerRepository.getUserByToken("MTm4NuLnbvRXmATDfFuvN9Qhc9M=")
+//    val result = messengerRepository.getRoomsByUser(user)
 }
