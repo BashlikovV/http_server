@@ -236,4 +236,16 @@ class HttpResponse {
 
         return  result
     }
+
+    fun handleGetAllUsersRequest(request: HttpRequest): String {
+        var result = ""
+
+        try {
+            result = Gson().toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
+        } catch (e: Exception) {
+            result = Gson().toJson(AddMessageResponseBody("ERROR"))
+        }
+
+        return  result
+    }
 }
