@@ -24,6 +24,9 @@ fun main() {
             HttpContract.UrlMethods.ADD_MESSAGE -> {
                 response?.handleAddMessageRequest(request = request)
             }
+            HttpContract.UrlMethods.GET_USERS -> {
+                response?.handleGetAllUsersRequest(request = request)
+            }
             else -> { "Error" }
         }
     }.bootstrap()
