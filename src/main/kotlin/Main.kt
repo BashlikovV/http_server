@@ -30,6 +30,9 @@ fun main() {
             HttpContract.UrlMethods.DELETE_ROOM -> {
                 response?.handleDeleteRoomRequest(request = request)
             }
+            HttpContract.UrlMethods.GET_USERNAME -> {
+                response?.handleGetUsernameRequest(request = request)
+            }
             else -> { "Error" }
         }
     }.bootstrap()
