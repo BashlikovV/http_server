@@ -27,6 +27,9 @@ fun main() {
             HttpContract.UrlMethods.GET_USERS -> {
                 response?.handleGetAllUsersRequest(request = request)
             }
+            HttpContract.UrlMethods.DELETE_ROOM -> {
+                response?.handleDeleteRoomRequest(request = request)
+            }
             else -> { "Error" }
         }
     }.bootstrap()
