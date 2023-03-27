@@ -272,4 +272,21 @@ class HttpResponse {
 
         return  result
     }
+
+    fun handleGetUsernameRequest(request: HttpRequest): String {
+        var result = ""
+
+        try {
+            val body = Gson().fromJson(
+                request.body,
+                GetUsernameRequestBody::class.java
+            )
+            val user = messengerRepository.getUserByToken(body.token)
+            result = Gson().toJson(GetUsernameResponseBody(user.username))
+        } catch (e: Exception) {
+            result = Gson().toJson(GetUsernameResponseBody("500 ERROR"))
+        }
+
+        return result
+    }
 }
