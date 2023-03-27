@@ -8,6 +8,7 @@ object HttpContract {
         const val ROOM_MESSAGES = "room-messages"
         const val GET_ROOMS = "get-rooms"
         const val ADD_ROOM = "add-room"
+        const val DELETE_ROOM = "delete-room"
         const val ADD_MESSAGE = "add-message"
         const val GET_USERS = "get-users"
     }
