@@ -293,7 +293,9 @@ class SQLiteMessengerRepository : MessengerRepository {
                 it.execute(
                     "delete from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
                         "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
-                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}' " +
+                         "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user1.token)}' " +
+                         "and ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user2.token)}';"
                 )
             }
         } catch (e: SQLException) {
