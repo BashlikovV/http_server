@@ -248,4 +248,28 @@ class HttpResponse {
 
         return  result
     }
+
+    fun handleDeleteRoomRequest(request: HttpRequest): String {
+        var result = ""
+
+        try {
+            val body = Gson().fromJson(
+                request.body,
+                DeleteRoomRequestBody::class.java
+            )
+
+            val user1 = messengerRepository.getUserByToken(body.user1)
+            val user2 = messengerRepository.getUserByToken(body.user2)
+
+            messengerRepository.deleteRoomByTwoUsers(
+                user1 = user1,
+                user2 = user2
+            )
+            result = Gson().toJson(DeleteRoomResponseBody("200 OK"))
+        } catch (e: Exception) {
+            result = Gson().toJson(DeleteRoomResponseBody("ERROR"))
+        }
+
+        return  result
+    }
 }
