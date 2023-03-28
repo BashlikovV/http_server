@@ -25,13 +25,19 @@ fun main() {
                 response?.handleAddMessageRequest(request = request)
             }
             HttpContract.UrlMethods.GET_USERS -> {
-                response?.handleGetAllUsersRequest(request = request)
+                response?.handleGetAllUsersRequest()
             }
             HttpContract.UrlMethods.DELETE_ROOM -> {
                 response?.handleDeleteRoomRequest(request = request)
             }
             HttpContract.UrlMethods.GET_USERNAME -> {
                 response?.handleGetUsernameRequest(request = request)
+            }
+            HttpContract.UrlMethods.GET_ROOM -> {
+                response?.handleGetRoomRequest(request = request)
+            }
+            HttpContract.UrlMethods.GET_USER -> {
+                response?.handleGetUserRequest(request = request)
             }
             else -> { "Error" }
         }
