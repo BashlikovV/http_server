@@ -160,14 +160,14 @@ class SQLiteMessengerRepository : MessengerRepository {
                 val resultSet = it.executeQuery(
                     "select * " +
                         "from ${SQLiteContract.UsersTable.TABLE_NAME} " +
-                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}='$token';"
                 )
 
                 result = User(
                     id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
-                    username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
-                    email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
-                    token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
+                    username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME) ?: "",
+                    email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL) ?: "",
+                    token = securityUtils.stringToBytes(token),
                     salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
                     createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
                 )
@@ -261,7 +261,9 @@ class SQLiteMessengerRepository : MessengerRepository {
                     "select * " +
                         "from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
                         "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
-                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}';"
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}' " +
+                        "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user2.token)}';"
                 )
 
                 result = Room(
@@ -352,6 +354,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             statement.queryTimeout = 30
 
             statement.use {
+                val from = "\"${SQLiteContract.MessagesTable.COLUMN_FROM}\""
                 it.execute(
                     "insert into ${SQLiteContract.MessagesTable.TABLE_NAME} (" +
                             "${SQLiteContract.MessagesTable.COLUMN_ROOM}, " +
@@ -359,14 +362,16 @@ class SQLiteMessengerRepository : MessengerRepository {
                             "${SQLiteContract.MessagesTable.COLUMN_VALUE}, " +
                             "${SQLiteContract.MessagesTable.COLUMN_FILE}, " +
                             "${SQLiteContract.MessagesTable.COLUMN_OWNER}, " +
-                            SQLiteContract.MessagesTable.COLUMN_TIME +
+                            "${SQLiteContract.MessagesTable.COLUMN_TIME}, " +
+                            from +
                         ") values (" +
                             "'${securityUtils.bytesToString(message.room.token)}', " +
                             "'${message.image}', " +
                             "'${message.value}', " +
                             "'${securityUtils.bytesToString(message.file)}', " +
                             "'${securityUtils.bytesToString(message.owner.token)}', " +
-                            "'${message.time}'" +
+                            "'${message.time}', " +
+                            "'${message.from}'" +
                         ");"
                 )
             }
@@ -432,8 +437,9 @@ class SQLiteMessengerRepository : MessengerRepository {
                             file = securityUtils.stringToBytes(
                                 resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FILE)
                             ),
-                            owner = getUserByToken(resultSet.getString(SQLiteContract.MessagesTable.COLUMN_OWNER)),
-                            time = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_TIME)
+                            owner = room.user1,
+                            time = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_TIME),
+                            from = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FROM)
                         )
                     )
                 }
@@ -481,6 +487,45 @@ class SQLiteMessengerRepository : MessengerRepository {
                         )
                     )
                 }
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
+    }
+
+    override fun getRoomByToken(token: String): Room {
+        var result = Room()
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "select * from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
+                            "where ${SQLiteContract.RoomsTable.COLUMN_TOKEN}='$token';"
+                )
+
+                result = Room(
+                    user1 = getUserByToken(
+                        resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_1)
+                    ),
+                    user2 = getUserByToken(
+                        resultSet.getString(SQLiteContract.RoomsTable.COLUMN_USER_2)
+                    ),
+                    token = securityUtils.stringToBytes(
+                        resultSet.getString(SQLiteContract.RoomsTable.COLUMN_TOKEN)
+                    )
+                )
             }
         } catch (e: SQLException) {
             e.printStackTrace()
