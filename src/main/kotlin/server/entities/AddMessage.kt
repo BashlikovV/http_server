@@ -6,7 +6,8 @@ data class AddMessageRequestBody(
     val value: String,
     val time: String,
     val owner: String,
-    val receiver: String
+    val receiver: String,
+    val from: String
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -19,6 +20,7 @@ data class AddMessageRequestBody(
         if (value != other.value) return false
         if (time != other.time) return false
         if (owner != other.owner) return false
+        if (from != other.file) return false
         return receiver == other.receiver
     }
 
@@ -29,6 +31,7 @@ data class AddMessageRequestBody(
         result = 31 * result + time.hashCode()
         result = 31 * result + owner.hashCode()
         result = 31 * result + receiver.hashCode()
+        result = 31 * result + from.hashCode()
         return result
     }
 }
