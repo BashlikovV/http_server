@@ -3,8 +3,11 @@ package server
 import com.google.gson.Gson
 import database.SQLiteMessengerRepository
 import database.entities.Message
+import database.entities.Room
+import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
+import java.util.Calendar
 
 class HttpResponse {
 
@@ -30,10 +33,6 @@ class HttpResponse {
 
     fun addHeader(key: String, value: String) {
         this.headers[key] = value
-    }
-
-    fun addHeaders(headers: Map<String, String>) {
-        this.headers.putAll(headers)
     }
 
     private fun message(): String {
@@ -124,16 +123,7 @@ class HttpResponse {
                 RoomMessagesRequestBody::class.java
             )
 
-            val user1 = messengerRepository.getUserByToken(
-                token = body.user1
-            )
-            val user2 = messengerRepository.getUserByToken(
-                token = body.user2
-            )
-            val room = messengerRepository.getRoomByTwoUsers(
-                user1 = user1,
-                user2 = user2
-            )
+            val room = messengerRepository.getRoomByToken(body.room)
             val messages = messengerRepository.getMessagesByRoom(room)
 
             result = Gson().toJson(RoomMessagesResponseBody(messages))
@@ -178,9 +168,8 @@ class HttpResponse {
      * }
      * */
     fun handleAddRoomRequest(request: HttpRequest): String {
-        var result = ""
 
-        try {
+        val result: String = try {
             val body = Gson().fromJson(
                 request.body,
                 AddRoomRequestBody::class.java
@@ -191,9 +180,9 @@ class HttpResponse {
 
             val token = messengerRepository.addRoomByTwoUsers(user1, user2)
 
-            result = Gson().toJson(AddRoomResponseBody(token = SecurityUtilsImpl().bytesToString(token)))
+            Gson().toJson(AddRoomResponseBody(token = SecurityUtilsImpl().bytesToString(token)))
         } catch (e: Exception) {
-            result = Gson().toJson(AddRoomResponseBody("ERROR"))
+            Gson().toJson(AddRoomResponseBody("ERROR"))
         }
 
         return result
@@ -211,7 +200,7 @@ class HttpResponse {
      * }
      * */
     fun handleAddMessageRequest(request: HttpRequest): String {
-        var result = ""
+        var result: String
 
         try {
             val body = Gson().fromJson(
@@ -221,36 +210,42 @@ class HttpResponse {
 
             val user1 = messengerRepository.getUserByToken(body.owner)
             val user2 = messengerRepository.getUserByToken(body.receiver)
+            val room = messengerRepository.getRoomByTwoUsers(user1, user2)
+
+            val img = body.image.ifEmpty {
+                "no image"
+            }
 
             messengerRepository.addMessage(Message(
-                room = messengerRepository.getRoomByTwoUsers(user1, user2),
-                image = body.image,
+                room = room,
+                image = img,
                 value = body.value,
                 file = body.file.toByteArray(),
-                time = body.time
+                time = Calendar.getInstance().time.toString(),
+                owner = messengerRepository.getUserByToken(body.owner),
+                from = body.from
             ))
             result = Gson().toJson(AddMessageResponseBody("200 OK"))
         } catch (e: Exception) {
-            result = Gson().toJson(AddMessageResponseBody("ERROR"))
+            result = Gson().toJson(AddMessageResponseBody("500 ERROR"))
         }
 
         return  result
     }
 
-    fun handleGetAllUsersRequest(request: HttpRequest): String {
-        var result = ""
+    fun handleGetAllUsersRequest(): String {
 
-        try {
-            result = Gson().toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
+        val result: String = try {
+            Gson().toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
         } catch (e: Exception) {
-            result = Gson().toJson(AddMessageResponseBody("ERROR"))
+            Gson().toJson(AddMessageResponseBody("ERROR"))
         }
 
         return  result
     }
 
     fun handleDeleteRoomRequest(request: HttpRequest): String {
-        var result = ""
+        var result: String
 
         try {
             val body = Gson().fromJson(
@@ -274,17 +269,51 @@ class HttpResponse {
     }
 
     fun handleGetUsernameRequest(request: HttpRequest): String {
-        var result = ""
 
-        try {
+        val result: String = try {
             val body = Gson().fromJson(
                 request.body,
                 GetUsernameRequestBody::class.java
             )
             val user = messengerRepository.getUserByToken(body.token)
-            result = Gson().toJson(GetUsernameResponseBody(user.username))
+            Gson().toJson(GetUsernameResponseBody(user.username))
         } catch (e: Exception) {
-            result = Gson().toJson(GetUsernameResponseBody("500 ERROR"))
+            Gson().toJson(GetUsernameResponseBody("500 ERROR"))
+        }
+
+        return result
+    }
+
+    fun handleGetRoomRequest(request: HttpRequest): String {
+
+        val result: String = try {
+            val body = Gson().fromJson(
+                request.body,
+                GetRoomRequestBody::class.java
+            )
+
+            val user1 = messengerRepository.getUserByToken(body.user1)
+            val user2 = messengerRepository.getUserByToken(body.user2)
+            val room = messengerRepository.getRoomByTwoUsers(user1, user2)
+            Gson().toJson(GetRoomResponseBody(room))
+        } catch (e: Exception) {
+            Gson().toJson(GetRoomResponseBody(Room()))
+        }
+
+        return result
+    }
+
+    fun handleGetUserRequest(request: HttpRequest): String {
+        val result: String = try {
+            val body = Gson().fromJson(
+                request.body,
+                GetUserRequestBody::class.java
+            )
+            Gson().toJson(GetUserResponseBody(
+                user = messengerRepository.getUserByToken(body.token)
+            ))
+        } catch (e: Exception) {
+            Gson().toJson(GetUserResponseBody(User()))
         }
 
         return result

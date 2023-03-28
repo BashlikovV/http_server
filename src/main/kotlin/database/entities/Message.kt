@@ -6,7 +6,8 @@ data class Message(
     val value: String = "",
     val file: ByteArray = byteArrayOf(),
     val owner: User = User(),
-    val time: String = ""
+    val time: String = "",
+    val from: String = ""
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -19,6 +20,7 @@ data class Message(
         if (value != other.value) return false
         if (!file.contentEquals(other.file)) return false
         if (owner != other.owner) return false
+        if (from != other.from) return false
         return time == other.time
     }
 
@@ -28,6 +30,7 @@ data class Message(
         result = 31 * result + value.hashCode()
         result = 31 * result + file.contentHashCode()
         result = 31 * result + owner.hashCode()
+        result = 31 * result + from.hashCode()
         result = 31 * result + time.hashCode()
         return result
     }

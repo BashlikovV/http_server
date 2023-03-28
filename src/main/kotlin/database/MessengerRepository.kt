@@ -65,4 +65,6 @@ interface MessengerRepository {
      * [getRoomsByUser] - function for getting rooms of user
      * */
     fun getRoomsByUser(user: User): List<Room>
+
+    fun getRoomByToken(token: String): Room
 }

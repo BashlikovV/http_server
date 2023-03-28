@@ -3,8 +3,7 @@ package server.entities
 import database.entities.Message
 
 data class RoomMessagesRequestBody(
-    val user1: String,
-    val user2: String
+    val room: String
 )
 
 data class RoomMessagesResponseBody(

@@ -21,5 +21,6 @@ CREATE TABLE messages (
     value       TEXT,
     file        BLOB,
     owner       TEXT NOT NULL,
-    time        TEXT NOT NULL
+    time        TEXT NOT NULL,
+    "from" TEXT NOT NULL
 );
