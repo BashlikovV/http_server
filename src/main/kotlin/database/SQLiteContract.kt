@@ -29,5 +29,6 @@ object SQLiteContract {
         const val COLUMN_FILE = "file"
         const val COLUMN_OWNER = "owner"
         const val COLUMN_TIME = "time"
+        const val COLUMN_FROM = "from"
     }
 }
