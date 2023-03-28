@@ -39,6 +39,9 @@ fun main() {
             HttpContract.UrlMethods.GET_USER -> {
                 response?.handleGetUserRequest(request = request)
             }
+            HttpContract.UrlMethods.DELETE_MESSAGE -> {
+                response?.handleDeleteMessageRequest(request = request)
+            }
             else -> { "Error" }
         }
     }.bootstrap()
