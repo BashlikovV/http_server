@@ -14,5 +14,6 @@ object HttpContract {
         const val GET_USERNAME = "get-username"
         const val GET_ROOM = "get-room"
         const val GET_USER = "get-user"
+        const val DELETE_MESSAGE = "delete-message"
     }
 }
