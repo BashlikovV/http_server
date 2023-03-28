@@ -233,8 +233,10 @@ class HttpResponse {
         return  result
     }
 
+    /**
+     * POST /get-users
+     * */
     fun handleGetAllUsersRequest(): String {
-
         val result: String = try {
             Gson().toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
         } catch (e: Exception) {
@@ -244,6 +246,13 @@ class HttpResponse {
         return  result
     }
 
+    /**
+     * POST /delete-room
+     * {
+     *      "user1":"<user_token>",
+     *      "user2":"<user_token>"
+     * }
+     * */
     fun handleDeleteRoomRequest(request: HttpRequest): String {
         var result: String
 
@@ -268,8 +277,13 @@ class HttpResponse {
         return  result
     }
 
+    /**
+     * POST /get-username
+     * {
+     *      "token":"<user_token>"
+     * }
+     * */
     fun handleGetUsernameRequest(request: HttpRequest): String {
-
         val result: String = try {
             val body = Gson().fromJson(
                 request.body,
@@ -284,8 +298,14 @@ class HttpResponse {
         return result
     }
 
+    /**
+     * POST /get-room
+     * {
+     *      "user1":"<user_token>",
+     *      "user2":"<user_token>"
+     * }
+     * */
     fun handleGetRoomRequest(request: HttpRequest): String {
-
         val result: String = try {
             val body = Gson().fromJson(
                 request.body,
@@ -303,6 +323,12 @@ class HttpResponse {
         return result
     }
 
+    /**
+     * POST /get-user
+     * {
+     *      "token":"<user_token>"
+     * }
+     * */
     fun handleGetUserRequest(request: HttpRequest): String {
         val result: String = try {
             val body = Gson().fromJson(
@@ -314,6 +340,21 @@ class HttpResponse {
             ))
         } catch (e: Exception) {
             Gson().toJson(GetUserResponseBody(User()))
+        }
+
+        return result
+    }
+
+    fun handleDeleteMessageRequest(request: HttpRequest): String {
+        val result: String = try {
+            val body = Gson().fromJson(
+                request.body,
+                DeleteMessageRequestBody::class.java
+            )
+            messengerRepository.deleteMessage(body.message)
+            Gson().toJson(DeleteMessageResponseBody("200 OK"))
+        } catch (e: Exception) {
+            Gson().toJson(DeleteMessageResponseBody("500 ERROR"))
         }
 
         return result
