@@ -3,7 +3,7 @@ package database.entities
 data class Message(
     val room: Room = Room(),
     val image: String = "",
-    val value: String = "",
+    val value: ByteArray = byteArrayOf(),
     val file: ByteArray = byteArrayOf(),
     val owner: User = User(),
     val time: String = "",
@@ -17,21 +17,21 @@ data class Message(
 
         if (room != other.room) return false
         if (image != other.image) return false
-        if (value != other.value) return false
+        if (!value.contentEquals(other.value)) return false
         if (!file.contentEquals(other.file)) return false
         if (owner != other.owner) return false
-        if (from != other.from) return false
-        return time == other.time
+        if (time != other.time) return false
+        return from == other.from
     }
 
     override fun hashCode(): Int {
         var result = room.hashCode()
         result = 31 * result + image.hashCode()
-        result = 31 * result + value.hashCode()
+        result = 31 * result + value.contentHashCode()
         result = 31 * result + file.contentHashCode()
         result = 31 * result + owner.hashCode()
-        result = 31 * result + from.hashCode()
         result = 31 * result + time.hashCode()
+        result = 31 * result + from.hashCode()
         return result
     }
 }

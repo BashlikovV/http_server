@@ -367,7 +367,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                         ") values (" +
                             "'${securityUtils.bytesToString(message.room.token)}', " +
                             "'${message.image}', " +
-                            "'${message.value}', " +
+                            "'${message.value.decodeToString()}', " +
                             "'${securityUtils.bytesToString(message.file)}', " +
                             "'${securityUtils.bytesToString(message.owner.token)}', " +
                             "'${message.time}', " +
@@ -433,7 +433,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                         Message(
                             room = room,
                             image = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_IMAGE),
-                            value = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_VALUE),
+                            value = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_VALUE).encodeToByteArray(),
                             file = securityUtils.stringToBytes(
                                 resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FILE)
                             ),

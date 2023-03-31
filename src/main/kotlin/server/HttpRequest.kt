@@ -32,14 +32,8 @@ class HttpRequest(
         }
         this.headers = Collections.unmodifiableMap(map)
 
-        val bodyLength = this.headers["Content-Length"]
-        val length = bodyLength?.toInt() ?: 0
         this.body = if (parts.size > 1) {
-            try {
-                parts[1].trim().substring(0, length)
-            } catch (_: Exception) {
-                parts[1].trim().substring(0, length - 6)
-            }
+            parts[1].trim()
         } else {
             ""
         }
