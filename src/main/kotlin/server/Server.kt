@@ -70,7 +70,7 @@ class Server(
 
                     if (!body.isNullOrBlank()) {
                         if (response.headers["Content-Type"] == null) {
-                            response.addHeader("Content-Type", "text/html; charset=utf-8")
+                            response.addHeader("Content-Type", "application/json; charset=utf-8")
                         }
                         response.setBody(body)
                     }
@@ -79,14 +79,12 @@ class Server(
 
                     response.statusCode = 500
                     response.status = "Internal server error"
-                    response.addHeader("Content-Type", "text/html; charset=utf-8")
-                    response.setBody("<html><body><h1>Error happens</h1></body></html>")
+                    response.addHeader("Content-Type", "application/json; charset=utf-8")
                 }
             } else {
                 response.statusCode = 404
                 response.status = "Not found"
-                response.addHeader("Content-Type", "text/html; charset=utf-8")
-                response.setBody("<html><body><h1>Resource not found</h1></body></html>")
+                response.addHeader("Content-Type", "application/json; charset=utf-8")
             }
 
             val resp = ByteBuffer.wrap(response.getBytes())
