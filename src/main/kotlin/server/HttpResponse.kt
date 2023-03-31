@@ -7,11 +7,13 @@ import database.entities.Room
 import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
-import java.util.Calendar
+import java.util.*
 
 class HttpResponse {
 
     private val messengerRepository = SQLiteMessengerRepository()
+
+    private val gson = Gson()
 
     var headers: MutableMap<String, String> = mutableMapOf(
         "Server" to "http_server",
@@ -66,7 +68,7 @@ class HttpResponse {
      * */
     fun handleSignUpRequest(request: HttpRequest): String {
         return try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 SignUpRequestBody::class.java
             )
@@ -76,9 +78,9 @@ class HttpResponse {
                 username = body.username,
                 password = body.password
             )
-            Gson().toJson(SignInResponseBody("200 OK"))
+            gson.toJson(SignInResponseBody("200 OK"))
         } catch (e: Exception) {
-            Gson().toJson(SignInResponseBody("500 ERROR"))
+            gson.toJson(SignInResponseBody("500 ERROR"))
         }
     }
 
@@ -91,7 +93,7 @@ class HttpResponse {
      * */
     fun handleSignInRequest(request: HttpRequest): String {
         return try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 SignInRequestBody::class.java
             )
@@ -101,9 +103,9 @@ class HttpResponse {
                 password = body.password
             )
             val token = messengerRepository.securityUtils.bytesToString(user.token)
-            Gson().toJson(SignInResponseBody(token))
+            gson.toJson(SignInResponseBody(token))
         } catch (e: Exception) {
-            Gson().toJson(SignInResponseBody("500 ERROR"))
+            gson.toJson(SignInResponseBody("500 ERROR"))
         }
     }
 
@@ -118,7 +120,7 @@ class HttpResponse {
         var result = ""
 
         try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 RoomMessagesRequestBody::class.java
             )
@@ -126,11 +128,11 @@ class HttpResponse {
             val room = messengerRepository.getRoomByToken(body.room)
             val messages = messengerRepository.getMessagesByRoom(room)
 
-            result = Gson().toJson(RoomMessagesResponseBody(messages))
+            result = gson.toJson(RoomMessagesResponseBody(messages))
         } catch (e: Exception) {
-            Gson().toJson(RoomMessagesResponseBody(listOf()))
+            gson.toJson(RoomMessagesResponseBody(listOf()))
         }
-
+        println("ress: ${result.length}")
         return result
     }
 
@@ -144,7 +146,7 @@ class HttpResponse {
         var result = ""
 
         try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 GetRoomsRequestBody::class.java
             )
@@ -152,9 +154,9 @@ class HttpResponse {
             val user = messengerRepository.getUserByToken(body.user)
 
             val rooms = messengerRepository.getRoomsByUser(user)
-            result = Gson().toJson(GetRoomsResponseBody(rooms))
+            result = gson.toJson(GetRoomsResponseBody(rooms))
         } catch (e: Exception) {
-            Gson().toJson(GetRoomsResponseBody(listOf()))
+            gson.toJson(GetRoomsResponseBody(listOf()))
         }
 
         return result
@@ -170,7 +172,7 @@ class HttpResponse {
     fun handleAddRoomRequest(request: HttpRequest): String {
 
         val result: String = try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 AddRoomRequestBody::class.java
             )
@@ -180,9 +182,9 @@ class HttpResponse {
 
             val token = messengerRepository.addRoomByTwoUsers(user1, user2)
 
-            Gson().toJson(AddRoomResponseBody(token = SecurityUtilsImpl().bytesToString(token)))
+            gson.toJson(AddRoomResponseBody(token = SecurityUtilsImpl().bytesToString(token)))
         } catch (e: Exception) {
-            Gson().toJson(AddRoomResponseBody("ERROR"))
+            gson.toJson(AddRoomResponseBody("ERROR"))
         }
 
         return result
@@ -203,7 +205,7 @@ class HttpResponse {
         var result: String
 
         try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 AddMessageRequestBody::class.java
             )
@@ -219,15 +221,15 @@ class HttpResponse {
             messengerRepository.addMessage(Message(
                 room = room,
                 image = img,
-                value = body.value,
+                value = body.value.encodeToByteArray(),
                 file = body.file.toByteArray(),
                 time = Calendar.getInstance().time.toString(),
                 owner = messengerRepository.getUserByToken(body.owner),
                 from = body.from
             ))
-            result = Gson().toJson(AddMessageResponseBody("200 OK"))
+            result = gson.toJson(AddMessageResponseBody("200 OK"))
         } catch (e: Exception) {
-            result = Gson().toJson(AddMessageResponseBody("500 ERROR"))
+            result = gson.toJson(AddMessageResponseBody("500 ERROR"))
         }
 
         return  result
@@ -238,9 +240,9 @@ class HttpResponse {
      * */
     fun handleGetAllUsersRequest(): String {
         val result: String = try {
-            Gson().toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
+            gson.toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
         } catch (e: Exception) {
-            Gson().toJson(AddMessageResponseBody("ERROR"))
+            gson.toJson(AddMessageResponseBody("ERROR"))
         }
 
         return  result
@@ -257,7 +259,7 @@ class HttpResponse {
         var result: String
 
         try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 DeleteRoomRequestBody::class.java
             )
@@ -269,9 +271,9 @@ class HttpResponse {
                 user1 = user1,
                 user2 = user2
             )
-            result = Gson().toJson(DeleteRoomResponseBody("200 OK"))
+            result = gson.toJson(DeleteRoomResponseBody("200 OK"))
         } catch (e: Exception) {
-            result = Gson().toJson(DeleteRoomResponseBody("ERROR"))
+            result = gson.toJson(DeleteRoomResponseBody("ERROR"))
         }
 
         return  result
@@ -285,14 +287,14 @@ class HttpResponse {
      * */
     fun handleGetUsernameRequest(request: HttpRequest): String {
         val result: String = try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 GetUsernameRequestBody::class.java
             )
             val user = messengerRepository.getUserByToken(body.token)
-            Gson().toJson(GetUsernameResponseBody(user.username))
+            gson.toJson(GetUsernameResponseBody(user.username))
         } catch (e: Exception) {
-            Gson().toJson(GetUsernameResponseBody("500 ERROR"))
+            gson.toJson(GetUsernameResponseBody("500 ERROR"))
         }
 
         return result
@@ -307,7 +309,7 @@ class HttpResponse {
      * */
     fun handleGetRoomRequest(request: HttpRequest): String {
         val result: String = try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 GetRoomRequestBody::class.java
             )
@@ -315,9 +317,9 @@ class HttpResponse {
             val user1 = messengerRepository.getUserByToken(body.user1)
             val user2 = messengerRepository.getUserByToken(body.user2)
             val room = messengerRepository.getRoomByTwoUsers(user1, user2)
-            Gson().toJson(GetRoomResponseBody(room))
+            gson.toJson(GetRoomResponseBody(room))
         } catch (e: Exception) {
-            Gson().toJson(GetRoomResponseBody(Room()))
+            gson.toJson(GetRoomResponseBody(Room()))
         }
 
         return result
@@ -331,15 +333,15 @@ class HttpResponse {
      * */
     fun handleGetUserRequest(request: HttpRequest): String {
         val result: String = try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 GetUserRequestBody::class.java
             )
-            Gson().toJson(GetUserResponseBody(
+            gson.toJson(GetUserResponseBody(
                 user = messengerRepository.getUserByToken(body.token)
             ))
         } catch (e: Exception) {
-            Gson().toJson(GetUserResponseBody(User()))
+            gson.toJson(GetUserResponseBody(User()))
         }
 
         return result
@@ -347,14 +349,14 @@ class HttpResponse {
 
     fun handleDeleteMessageRequest(request: HttpRequest): String {
         val result: String = try {
-            val body = Gson().fromJson(
+            val body = gson.fromJson(
                 request.body,
                 DeleteMessageRequestBody::class.java
             )
             messengerRepository.deleteMessage(body.message)
-            Gson().toJson(DeleteMessageResponseBody("200 OK"))
+            gson.toJson(DeleteMessageResponseBody("200 OK"))
         } catch (e: Exception) {
-            Gson().toJson(DeleteMessageResponseBody("500 ERROR"))
+            gson.toJson(DeleteMessageResponseBody("500 ERROR"))
         }
 
         return result
