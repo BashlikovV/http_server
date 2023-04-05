@@ -214,15 +214,11 @@ class HttpResponse {
             val user2 = messengerRepository.getUserByToken(body.receiver)
             val room = messengerRepository.getRoomByTwoUsers(user1, user2)
 
-            val img = body.image.ifEmpty {
-                "no image"
-            }
-
             messengerRepository.addMessage(Message(
                 room = room,
-                image = img,
+                image = body.image,
                 value = body.value.encodeToByteArray(),
-                file = body.file.toByteArray(),
+                file = body.file,
                 time = Calendar.getInstance().time.toString(),
                 owner = messengerRepository.getUserByToken(body.owner),
                 from = body.from
@@ -347,6 +343,12 @@ class HttpResponse {
         return result
     }
 
+    /**
+     * POST /delete-message
+     * {
+     *      "message":"[Message]"
+     * }
+     * */
     fun handleDeleteMessageRequest(request: HttpRequest): String {
         val result: String = try {
             val body = gson.fromJson(

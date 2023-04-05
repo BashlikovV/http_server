@@ -368,7 +368,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                             "'${securityUtils.bytesToString(message.room.token)}', " +
                             "'${message.image}', " +
                             "'${message.value.decodeToString()}', " +
-                            "'${securityUtils.bytesToString(message.file)}', " +
+                            "'${message.file.decodeToString()}', " +
                             "'${securityUtils.bytesToString(message.owner.token)}', " +
                             "'${message.time}', " +
                             "'${message.from}'" +
@@ -396,10 +396,10 @@ class SQLiteMessengerRepository : MessengerRepository {
                 it.execute(
                     "delete from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
                         "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(message.room.token)}' " +
-                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}='${securityUtils.bytesToString(message.owner.token)}' " +
+//                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}='${securityUtils.bytesToString(message.owner.token)}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${securityUtils.bytesToString(message.file)}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_TIME}='${message.time}' " +
-                        "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}='${message.value}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}='${message.value.decodeToString()}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_IMAGE}='${message.image}';"
                 )
             }
@@ -434,9 +434,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                             room = room,
                             image = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_IMAGE),
                             value = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_VALUE).encodeToByteArray(),
-                            file = securityUtils.stringToBytes(
-                                resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FILE)
-                            ),
+                            file = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FILE).encodeToByteArray(),
                             owner = room.user1,
                             time = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_TIME),
                             from = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FROM)
