@@ -38,4 +38,8 @@ class HttpRequest(
             ""
         }
     }
+
+    fun isOpen(): Boolean {
+        return headers["Connection"] == "Keep-Alive"
+    }
 }
