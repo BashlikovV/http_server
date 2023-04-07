@@ -126,7 +126,7 @@ class HttpResponse {
             )
 
             val room = messengerRepository.getRoomByToken(body.room)
-            val messages = messengerRepository.getMessagesByRoom(room)
+            val messages = messengerRepository.getMessagesByRoom(room, body.pagination)
 
             result = gson.toJson(RoomMessagesResponseBody(messages))
         } catch (e: Exception) {
