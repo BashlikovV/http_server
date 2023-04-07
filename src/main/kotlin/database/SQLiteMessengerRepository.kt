@@ -414,7 +414,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         }
     }
 
-    override fun getMessagesByRoom(room: Room): List<Message> {
+    override fun getMessagesByRoom(room: Room, pagination: IntRange): List<Message> {
         val result = mutableListOf<Message>()
 
         try {
@@ -452,7 +452,27 @@ class SQLiteMessengerRepository : MessengerRepository {
             }
         }
 
-        return result
+        return result.calculateSubList(pagination)
+    }
+
+    private fun List<Message>.calculateSubList(pagination: IntRange): List<Message> {
+        var tmp = this
+        tmp = if (tmp.size > pagination.last) {
+            tmp.subList(tmp.size - pagination.last, tmp.size - pagination.first)
+        } else {
+            val low = if (pagination.last - 30 < 0) {
+                0
+            } else {
+                pagination.last - 30
+            }
+            val high = if (pagination.last > tmp.size) {
+                tmp.size
+            } else {
+                pagination.last
+            }
+            tmp.subList(tmp.size - high, tmp.size - low)
+        }
+        return tmp
     }
 
     override fun getRoomsByUser(user: User): List<Room> {
