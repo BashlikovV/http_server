@@ -59,7 +59,7 @@ interface MessengerRepository {
     /**
      * [getMessagesByRoom] - function for getting all messages between users into room
      * */
-    fun getMessagesByRoom(room: Room): List<Message>
+    fun getMessagesByRoom(room: Room, pagination: IntRange): List<Message>
 
     /**
      * [getRoomsByUser] - function for getting rooms of user
