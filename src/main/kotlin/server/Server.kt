@@ -1,21 +1,21 @@
 package server
 
 import Repository
+import okio.ByteString.Companion.toByteString
+import java.io.DataOutputStream
 import java.io.IOException
 import java.net.InetSocketAddress
-import java.nio.ByteBuffer
-import java.nio.channels.AsynchronousServerSocketChannel
-import java.nio.channels.AsynchronousSocketChannel
+import java.net.ServerSocket
+import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Future
 import java.util.concurrent.TimeoutException
 
 class Server(
     private val handler: HttpHandler?
 ) {
 
-    private lateinit var server : AsynchronousServerSocketChannel
+    private lateinit var server : ServerSocket
 
     companion object {
         private const val BUFFER_SIZE = 256
@@ -23,11 +23,11 @@ class Server(
 
     fun bootstrap() {
         try {
-            server = AsynchronousServerSocketChannel.open()
+            server = ServerSocket()
             server.bind(InetSocketAddress(Repository.IP_ADDRESS, Repository.PORT))
             while (true) {
-                val future = server.accept()
-                handleClient(future)
+                val socket = server.accept()
+                ClientHandler(socket)
             }
         } catch (e: IOException) {
             e.printStackTrace()
@@ -40,57 +40,72 @@ class Server(
         }
     }
 
-    private fun handleClient(future: Future<AsynchronousSocketChannel>){
-        println("New client connection")
+    inner class ClientHandler(
+        private val socket: Socket
+    ) : Thread() {
 
-        val clientChannel = future.get()
+        init {
+            start()
+        }
 
-        while (clientChannel != null && clientChannel.isOpen) {
-            val buffer = ByteBuffer.allocate(BUFFER_SIZE)
-            val builder = StringBuilder()
-            var keepReading = true
+        override fun run() {
+            super.run()
+            println("New client connection")
 
-            while (keepReading) {
-                val readResult = clientChannel.read(buffer).get()
+            val stream = socket.getOutputStream()
 
-                keepReading = readResult == BUFFER_SIZE
-                buffer.flip()
-                val charBuffer = StandardCharsets.UTF_8.decode(buffer)
-                builder.append(charBuffer)
+            while (!socket.isClosed) {
+                val buffer = ByteArray(BUFFER_SIZE)
+                val builder = StringBuilder()
+                var keepReading = true
 
-                buffer.clear()
-            }
+                while (keepReading) {
+                    val readResult = socket.getInputStream().read(buffer)
 
-            val request = HttpRequest(builder.toString())
-            val response = HttpResponse()
+                    keepReading = readResult == BUFFER_SIZE
+                    val charBuffer = StandardCharsets.UTF_8.decode(buffer.toByteString().asByteBuffer())
+                    builder.append(charBuffer)
 
-            if (handler != null) {
-                try {
-                    val body = this.handler.handle(request, response)
+                    buffer.fill(0)
+                }
 
-                    if (!body.isNullOrBlank()) {
-                        if (response.headers["Content-Type"] == null) {
-                            response.addHeader("Content-Type", "application/json; charset=utf-8")
+                val request = HttpRequest(builder.toString())
+                val response = HttpResponse()
+
+                if (handler != null) {
+                    try {
+                        if (request.method == HttpMethod.GET) {
+                            val dataOutputStream = DataOutputStream(socket.getOutputStream())
+                            WebSocketHandlerImpl().handle(request, response)?.let { dataOutputStream.write(it) }
+                        } else {
+                            val body = handler.handle(request, response)
+
+                            if (!body.isNullOrBlank()) {
+                                if (response.headers["Content-Type"] == null) {
+                                    response.addHeader("Content-Type", "application/json; charset=utf-8")
+                                }
+                                response.setBody(body)
+                            }
                         }
-                        response.setBody(body)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
 
-                    response.statusCode = 500
-                    response.status = "Internal server error"
+                        response.statusCode = 500
+                        response.status = "Internal server error"
+                        response.addHeader("Content-Type", "application/json; charset=utf-8")
+                    }
+                } else {
+                    response.statusCode = 404
+                    response.status = "Not found"
                     response.addHeader("Content-Type", "application/json; charset=utf-8")
                 }
-            } else {
-                response.statusCode = 404
-                response.status = "Not found"
-                response.addHeader("Content-Type", "application/json; charset=utf-8")
+
+                stream.write(response.getBytes())
+                stream.flush()
+                stream.close()
+                socket.close()
             }
-
-            val resp = ByteBuffer.wrap(response.getBytes())
-            clientChannel.write(resp)
-
-            clientChannel.close()
+            this.interrupt()
         }
     }
 }
