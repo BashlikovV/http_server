@@ -2,7 +2,6 @@ package server
 
 import Repository
 import okio.ByteString.Companion.toByteString
-import java.io.DataOutputStream
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -75,8 +74,15 @@ class Server(
                 if (handler != null) {
                     try {
                         if (request.method == HttpMethod.GET) {
-                            val dataOutputStream = DataOutputStream(socket.getOutputStream())
-                            WebSocketHandlerImpl().handle(request, response)?.let { dataOutputStream.write(it) }
+                            val outputStream = socket.getOutputStream()
+                            WebSocketHandlerImpl().handle(request, response)?.let {
+                                outputStream.write(it)
+                            }
+                            outputStream.flush()
+                            outputStream.close()
+                            stream.flush()
+                            stream.close()
+                            this.interrupt()
                         } else {
                             val body = handler.handle(request, response)
 
