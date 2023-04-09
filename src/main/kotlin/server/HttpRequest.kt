@@ -6,7 +6,7 @@ class HttpRequest(
     message: String
 ) {
 
-    private val method: HttpMethod
+    val method: HttpMethod
     val url: String
     private val headers: Map<String, String>
     val body: String
@@ -32,8 +32,16 @@ class HttpRequest(
         }
         this.headers = Collections.unmodifiableMap(map)
 
+        val bodyLength = this.headers["Content-Length"]
         this.body = if (parts.size > 1) {
-            parts[1].trim()
+            try {
+                String(
+                    parts[1].trim().substring(0, bodyLength!!.toInt())
+                        .toByteArray().filter { it != 0.toByte() }.toByteArray()
+                )
+            } catch (_: Exception) {
+                ""
+            }
         } else {
             ""
         }

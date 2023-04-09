@@ -1,19 +1,24 @@
 package server
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import database.SQLiteMessengerRepository
 import database.entities.Message
 import database.entities.Room
 import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileNotFoundException
+import java.nio.ByteBuffer
 import java.util.*
+import javax.imageio.ImageIO
 
 class HttpResponse {
 
     private val messengerRepository = SQLiteMessengerRepository()
 
-    private val gson = Gson()
+    private val gson = GsonBuilder().setLenient().create()
 
     var headers: MutableMap<String, String> = mutableMapOf(
         "Server" to "http_server",
@@ -362,5 +367,24 @@ class HttpResponse {
         }
 
         return result
+    }
+
+    fun handleGetImageRequest(request: HttpRequest): ByteArray {
+        val imgUri = request.url.substringAfter("?")
+        return getImageByUri(imgUri)
+    }
+
+    private fun getImageByUri(uri: String): ByteArray {
+        val image = File(uri)
+        if (image.exists()) {
+            val imageIo = ImageIO.read(image)
+            val byteArrayOutputStream = ByteArrayOutputStream()
+            ImageIO.write(imageIo, "jpg", byteArrayOutputStream)
+            byteArrayOutputStream.flush()
+            val size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array()
+            return size + byteArrayOutputStream.toByteArray()
+        } else {
+            throw FileNotFoundException()
+        }
     }
 }
