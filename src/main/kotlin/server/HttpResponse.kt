@@ -7,6 +7,8 @@ import database.entities.Room
 import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
+import java.io.File
+import java.io.FileNotFoundException
 import java.util.*
 
 class HttpResponse {
@@ -362,5 +364,19 @@ class HttpResponse {
         }
 
         return result
+    }
+
+    fun handleGetImageRequest(request: HttpRequest): ByteArray {
+        val imgUri = request.url.substringAfter("?")
+        return getImageByUri(imgUri)
+    }
+
+    private fun getImageByUri(uri: String): ByteArray {
+        val image = File(uri)
+        if (image.exists()) {
+            return image.readBytes()
+        } else {
+            throw FileNotFoundException()
+        }
     }
 }
