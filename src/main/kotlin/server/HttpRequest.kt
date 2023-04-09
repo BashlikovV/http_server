@@ -35,7 +35,10 @@ class HttpRequest(
         val bodyLength = this.headers["Content-Length"]
         this.body = if (parts.size > 1) {
             try {
-                parts[1].trim().substring(0, bodyLength!!.toInt())
+                String(
+                    parts[1].trim().substring(0, bodyLength!!.toInt())
+                        .toByteArray().filter { it != 0.toByte() }.toByteArray()
+                )
             } catch (_: Exception) {
                 ""
             }
