@@ -1,49 +1,8 @@
-import server.HttpContract
-import server.HttpRequest
-import server.HttpResponse
-import server.Server
+import server.*
 
 fun main() {
     Server { request: HttpRequest?, response: HttpResponse? ->
-        when(request?.url?.substringBefore("?")?.substringAfter("/")) {
-            HttpContract.UrlMethods.SIGN_UP -> {
-                response?.handleSignUpRequest(request = request)
-            }
-            HttpContract.UrlMethods.SIGN_IN -> {
-                response?.handleSignInRequest(request = request)
-            }
-            HttpContract.UrlMethods.ROOM_MESSAGES -> {
-                response?.handleGetRoomMessagesRequest(request = request)
-            }
-            HttpContract.UrlMethods.GET_ROOMS -> {
-                response?.handleGetRoomsRequest(request = request)
-            }
-            HttpContract.UrlMethods.ADD_ROOM -> {
-                response?.handleAddRoomRequest(request = request)
-            }
-            HttpContract.UrlMethods.ADD_MESSAGE -> {
-                response?.handleAddMessageRequest(request = request)
-            }
-            HttpContract.UrlMethods.GET_USERS -> {
-                response?.handleGetAllUsersRequest()
-            }
-            HttpContract.UrlMethods.DELETE_ROOM -> {
-                response?.handleDeleteRoomRequest(request = request)
-            }
-            HttpContract.UrlMethods.GET_USERNAME -> {
-                response?.handleGetUsernameRequest(request = request)
-            }
-            HttpContract.UrlMethods.GET_ROOM -> {
-                response?.handleGetRoomRequest(request = request)
-            }
-            HttpContract.UrlMethods.GET_USER -> {
-                response?.handleGetUserRequest(request = request)
-            }
-            HttpContract.UrlMethods.DELETE_MESSAGE -> {
-                response?.handleDeleteMessageRequest(request = request)
-            }
-            else -> { "Error" }
-        }
+        HttpHandlerImpl().handle(request!!, response!!)
     }.bootstrap()
 
 //    val messengerRepository = SQLiteMessengerRepository()
