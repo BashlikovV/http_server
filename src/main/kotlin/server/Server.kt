@@ -3,7 +3,6 @@ package server
 import Repository
 import okio.ByteString.Companion.toByteString
 import java.io.IOException
-import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
@@ -53,6 +52,7 @@ class Server(
             println("New client connection")
 
             val stream = socket.getOutputStream()
+            val inputStream = socket.getInputStream()
 
             while (!socket.isClosed) {
                 val buffer = ByteArray(BUFFER_SIZE)
@@ -60,7 +60,7 @@ class Server(
                 var keepReading = true
 
                 while (keepReading) {
-                    val readResult = socket.getInputStream().read(buffer)
+                    val readResult = inputStream.read(buffer)
 
                     keepReading = readResult == BUFFER_SIZE
                     val charBuffer = StandardCharsets.UTF_8.decode(buffer.toByteString().asByteBuffer())
@@ -69,24 +69,32 @@ class Server(
                     buffer.fill(0)
                 }
 
+                if (builder.toString().contains("multipart/mixed")) {
+                    val tmp = HttpRequest(builder.toString())
+                    val size = tmp.headers["Content-Length"]!!.toInt()
+                    val bytes = ByteArray(1024)
+                    var readSize = 0
+                    while (readSize != size) {
+                        val count = inputStream.read(bytes)
+                        if (count < 0) continue
+                        builder.append(bytes.decodeToString())
+                        bytes.fill(0)
+                        readSize += count
+                    }
+                }
+
                 val request = HttpRequest(builder.toString())
                 val response = HttpResponse()
 
                 if (handler != null) {
                     try {
                         if (request.method == HttpMethod.GET) {
-                            var outputStream: OutputStream? = null
                             try {
-                                outputStream = socket.getOutputStream()
                                 WebSocketHandlerImpl().handle(request, response)?.let {
-                                    outputStream.write(it)
+                                    stream.write(it)
                                 }
                             } catch (_: Exception) {
                             } finally {
-                                outputStream?.run {
-                                    flush()
-                                    close()
-                                }
                                 stream.run {
                                     flush()
                                     close()
@@ -116,7 +124,9 @@ class Server(
                     response.addHeader("Content-Type", "application/json; charset=utf-8")
                 }
 
-                stream.write(response.getBytes())
+                if (request.method != HttpMethod.GET) {
+                    stream.write(response.getBytes())
+                }
                 stream.flush()
                 stream.close()
                 socket.close()

@@ -39,6 +39,9 @@ class HttpHandlerImpl : HttpHandler {
             HttpContract.UrlMethods.DELETE_MESSAGE -> {
                 response.handleDeleteMessageRequest(request = request)
             }
+            HttpContract.UrlMethods.ADD_IMAGE -> {
+                response.handleAddImageRequest(request = request)
+            }
             else -> {
                 "Error"
             }

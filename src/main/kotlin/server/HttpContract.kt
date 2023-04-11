@@ -17,5 +17,6 @@ object HttpContract {
         const val DELETE_MESSAGE = "delete-message"
 
         const val GET_IMAGE = "get-image"
+        const val ADD_IMAGE = "add-image"
     }
 }

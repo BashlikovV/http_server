@@ -8,7 +8,7 @@ class HttpRequest(
 
     val method: HttpMethod
     val url: String
-    private val headers: Map<String, String>
+    val headers: Map<String, String>
     val body: String
 
     companion object {
@@ -36,7 +36,7 @@ class HttpRequest(
         this.body = if (parts.size > 1) {
             try {
                 String(
-                    parts[1].trim().substring(0, bodyLength!!.toInt())
+                    parts.last().trim()/*.substring(0, bodyLength!!.toInt())*/
                         .toByteArray().filter { it != 0.toByte() }.toByteArray()
                 )
             } catch (_: Exception) {
