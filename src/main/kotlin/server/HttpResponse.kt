@@ -10,6 +10,7 @@ import utils.SecurityUtilsImpl
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.*
 import javax.imageio.ImageIO
@@ -386,5 +387,30 @@ class HttpResponse {
         } else {
             throw FileNotFoundException()
         }
+    }
+
+    fun handleAddImageRequest(request: HttpRequest): String {
+        val body = gson.fromJson(
+            request.body,
+            AddImageRequestBody::class.java
+        )
+        val fileName = SecurityUtilsImpl().bytesToString(SecurityUtilsImpl().generateSalt())
+        messengerRepository.addMessage(Message(
+            room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
+            image = fileName,
+            value = "Image".encodeToByteArray(),
+            owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
+            from = SecurityUtilsImpl().bytesToString(body.owner),
+            time = Calendar.getInstance().time.toString(),
+            file = "no file".encodeToByteArray()
+        ))
+        try {
+            val file = File("/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName")
+            file.createNewFile()
+            FileOutputStream(file).write(body.image)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return gson.toJson("OK")
     }
 }
