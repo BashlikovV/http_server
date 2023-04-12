@@ -452,7 +452,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             }
         }
 
-        return result.calculateSubList(pagination)
+        return result.calculateSubList(pagination).sortedBy { it.time }
     }
 
     private fun List<Message>.calculateSubList(pagination: IntRange): List<Message> {
