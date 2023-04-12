@@ -370,6 +370,9 @@ class HttpResponse {
         return result
     }
 
+    /**
+     * GET /get-image?<uri_of_image>\r\nContent-Type:image/jpg \r\n\r\n
+     * */
     fun handleGetImageRequest(request: HttpRequest): ByteArray {
         val imgUri = request.url.substringAfter("?")
         return getImageByUri(imgUri)
@@ -389,6 +392,15 @@ class HttpResponse {
         }
     }
 
+    /**
+     * POST /add-image
+     * * multipart body
+     * {
+     *      "image":"<ByteArray that represent image>",
+     *      "room":"<ByteArray that represent token of room>",
+     *      "owner":"<ByteArray that represent owner token>"
+     * }
+     * */
     fun handleAddImageRequest(request: HttpRequest): String {
         val body = gson.fromJson(
             request.body,
