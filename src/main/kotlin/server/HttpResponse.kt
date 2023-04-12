@@ -407,7 +407,9 @@ class HttpResponse {
         ))
         messengerRepository.addImage(fileName)
         try {
-            val file = File("/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName")
+            val file = File(
+                "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName"
+            )
             ImageIO.write(
                 ImageIO.read(ByteArrayInputStream(body.image)),
                 "jpg",

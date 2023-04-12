@@ -397,7 +397,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                     "delete from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
                         "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(message.room.token)}' " +
 //                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}='${securityUtils.bytesToString(message.owner.token)}' " +
-                        "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${securityUtils.bytesToString(message.file)}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${message.file.decodeToString()}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_TIME}='${message.time}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}='${message.value.decodeToString()}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_IMAGE}='${message.image}';"
