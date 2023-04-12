@@ -557,4 +557,63 @@ class SQLiteMessengerRepository : MessengerRepository {
 
         return result
     }
+
+    override fun addImage(imageUri: String) {
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                it.execute(
+                    "insert into ${SQLiteContract.ImagesTable.TABLE_NAME} (" +
+                            SQLiteContract.ImagesTable.COLUMN_IMAGE +
+                        ") values (" +
+                            "'$imageUri'" +
+                        ");"
+                )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override fun getMaxId(): Int {
+        var result = 0
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "SELECT ${SQLiteContract.ImagesTable.COLUMN_ID} " +
+                        "FROM ${SQLiteContract.ImagesTable.TABLE_NAME} " +
+                        "WHERE ${SQLiteContract.ImagesTable.COLUMN_ID}=(" +
+                            "SELECT max(${SQLiteContract.ImagesTable.COLUMN_ID}) " +
+                            "FROM ${SQLiteContract.ImagesTable.TABLE_NAME}" +
+                        ");"
+                )
+
+                result = resultSet.getInt(SQLiteContract.ImagesTable.COLUMN_ID)
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
+    }
 }
