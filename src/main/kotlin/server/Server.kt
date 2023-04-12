@@ -56,7 +56,7 @@ class Server(
 
             while (!socket.isClosed) {
                 val buffer = ByteArray(BUFFER_SIZE)
-                val builder = StringBuilder()
+                var builder = StringBuilder()
                 var keepReading = true
 
                 while (keepReading) {
@@ -70,20 +70,22 @@ class Server(
                 }
 
                 if (builder.toString().contains("multipart/mixed")) {
-                    val tmp = HttpRequest(builder.toString())
+                    val tmp = HttpRequest(builder.toString(), true)
                     val size = tmp.headers["Content-Length"]!!.toInt()
-                    val bytes = ByteArray(1024)
+                    val bytes = ByteArray(4096)
                     var readSize = 0
                     while (readSize != size) {
                         val count = inputStream.read(bytes)
-                        if (count < 0) continue
+                        if (count == -1) break
                         builder.append(bytes.decodeToString())
                         bytes.fill(0)
                         readSize += count
                     }
+                    builder = java.lang.StringBuilder().append(builder.toString().substringBeforeLast("}"))
+                    builder.append("}")
                 }
 
-                val request = HttpRequest(builder.toString())
+                val request = HttpRequest(builder.toString(), false)
                 val response = HttpResponse()
 
                 if (handler != null) {
