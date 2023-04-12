@@ -394,8 +394,7 @@ class HttpResponse {
             request.body,
             AddImageRequestBody::class.java
         )
-        val fileName = "image${0}.jpg"
-//        Repository.imageCount++
+        val fileName = "image${messengerRepository.getMaxId() + 1}.jpg"
         messengerRepository.addMessage(Message(
             room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
             image = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName",
@@ -406,6 +405,7 @@ class HttpResponse {
             time = Calendar.getInstance().time.toString(),
             file = "no file".encodeToByteArray()
         ))
+        messengerRepository.addImage(fileName)
         try {
             val file = File("/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName")
             ImageIO.write(
