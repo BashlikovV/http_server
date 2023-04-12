@@ -72,7 +72,7 @@ class Server(
                 if (builder.toString().contains("multipart/mixed")) {
                     val tmp = HttpRequest(builder.toString(), true)
                     val size = tmp.headers["Content-Length"]!!.toInt()
-                    val bytes = ByteArray(4096)
+                    val bytes = ByteArray(8192)
                     var readSize = 0
                     while (readSize != size) {
                         val count = inputStream.read(bytes)
