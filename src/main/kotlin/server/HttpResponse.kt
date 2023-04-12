@@ -7,10 +7,10 @@ import database.entities.Room
 import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.*
 import javax.imageio.ImageIO
@@ -394,11 +394,13 @@ class HttpResponse {
             request.body,
             AddImageRequestBody::class.java
         )
-        val fileName = SecurityUtilsImpl().bytesToString(SecurityUtilsImpl().generateSalt())
+        val fileName = "image${0}.jpg"
+//        Repository.imageCount++
         messengerRepository.addMessage(Message(
             room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
-            image = fileName,
-            value = "Image".encodeToByteArray(),
+            image = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName",
+            value = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName"
+                .encodeToByteArray(),
             owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
             from = SecurityUtilsImpl().bytesToString(body.owner),
             time = Calendar.getInstance().time.toString(),
@@ -406,8 +408,11 @@ class HttpResponse {
         ))
         try {
             val file = File("/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName")
-            file.createNewFile()
-            FileOutputStream(file).write(body.image)
+            ImageIO.write(
+                ImageIO.read(ByteArrayInputStream(body.image)),
+                "jpg",
+                file
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
