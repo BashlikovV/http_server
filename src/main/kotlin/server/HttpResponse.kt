@@ -1,5 +1,6 @@
 package server
 
+import Repository
 import com.google.gson.GsonBuilder
 import database.SQLiteMessengerRepository
 import database.entities.Message
@@ -220,15 +221,17 @@ class HttpResponse {
             val user2 = messengerRepository.getUserByToken(body.receiver)
             val room = messengerRepository.getRoomByTwoUsers(user1, user2)
 
-            messengerRepository.addMessage(Message(
-                room = room,
-                image = body.image,
-                value = body.value.encodeToByteArray(),
-                file = body.file,
-                time = Calendar.getInstance().time.toString(),
-                owner = messengerRepository.getUserByToken(body.owner),
-                from = body.from
-            ))
+            messengerRepository.addMessage(
+                Message(
+                    room = room,
+                    image = body.image,
+                    value = body.value.encodeToByteArray(),
+                    file = body.file,
+                    time = Calendar.getInstance().time.toString(),
+                    owner = messengerRepository.getUserByToken(body.owner),
+                    from = body.from
+                )
+            )
             result = gson.toJson(AddMessageResponseBody("200 OK"))
         } catch (e: Exception) {
             result = gson.toJson(AddMessageResponseBody("500 ERROR"))
@@ -407,25 +410,27 @@ class HttpResponse {
             AddImageRequestBody::class.java
         )
         val fileName = "image${messengerRepository.getMaxId() + 1}.jpg"
-        messengerRepository.addMessage(Message(
-            room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
-            image = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName",
-            value = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName"
-                .encodeToByteArray(),
-            owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
-            from = SecurityUtilsImpl().bytesToString(body.owner),
-            time = Calendar.getInstance().time.toString(),
-            file = "no file".encodeToByteArray()
-        ))
         messengerRepository.addImage(fileName)
         try {
             val file = File(
-                "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName"
+                "${Repository.IMAGES_DIRECTORY}$fileName"
             )
             ImageIO.write(
                 ImageIO.read(ByteArrayInputStream(body.image)),
                 "jpg",
                 file
+            )
+            messengerRepository.addMessage(
+                Message(
+                    room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
+                    image = "${Repository.IMAGES_DIRECTORY}$fileName",
+                    value = "${Repository.IMAGES_DIRECTORY}$fileName"
+                        .encodeToByteArray(),
+                    owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
+                    from = SecurityUtilsImpl().bytesToString(body.owner),
+                    time = Calendar.getInstance().time.toString(),
+                    file = "no file".encodeToByteArray()
+                )
             )
         } catch (e: Exception) {
             e.printStackTrace()
