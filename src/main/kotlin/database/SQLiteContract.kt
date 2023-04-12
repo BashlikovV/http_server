@@ -31,4 +31,10 @@ object SQLiteContract {
         const val COLUMN_TIME = "time"
         const val COLUMN_FROM = "from"
     }
+
+    object ImagesTable {
+        const val TABLE_NAME = "images"
+        const val COLUMN_IMAGE = "image"
+        const val COLUMN_ID = "id"
+    }
 }
