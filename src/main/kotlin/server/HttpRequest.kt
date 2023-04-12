@@ -3,7 +3,8 @@ package server
 import java.util.Collections
 
 class HttpRequest(
-    message: String
+    message: String,
+    isMultipartBody: Boolean
 ) {
 
     val method: HttpMethod
@@ -19,7 +20,11 @@ class HttpRequest(
 
     init {
         val parts = message.split(DELIMITER)
-        val head = parts.first()
+        val head = if (isMultipartBody) {
+            parts.first() + parts[1]
+        } else {
+            parts.first()
+        }
         val headers = head.split(NEW_LINE)
         val firstLine = headers.first().split(" ")
         method = HttpMethod.valueOf(firstLine[0])
@@ -32,7 +37,7 @@ class HttpRequest(
         }
         this.headers = Collections.unmodifiableMap(map)
 
-        val bodyLength = this.headers["Content-Length"]
+//        val bodyLength = this.headers["Content-Length"]
         this.body = if (parts.size > 1) {
             try {
                 String(

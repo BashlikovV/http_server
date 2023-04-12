@@ -7,10 +7,10 @@ import database.entities.Room
 import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
 import java.nio.ByteBuffer
 import java.util.*
 import javax.imageio.ImageIO
@@ -370,6 +370,9 @@ class HttpResponse {
         return result
     }
 
+    /**
+     * GET /get-image?<uri_of_image>\r\nContent-Type:image/jpg \r\n\r\n
+     * */
     fun handleGetImageRequest(request: HttpRequest): ByteArray {
         val imgUri = request.url.substringAfter("?")
         return getImageByUri(imgUri)
@@ -389,25 +392,41 @@ class HttpResponse {
         }
     }
 
+    /**
+     * POST /add-image
+     * * multipart body
+     * {
+     *      "image":"<ByteArray that represent image>",
+     *      "room":"<ByteArray that represent token of room>",
+     *      "owner":"<ByteArray that represent owner token>"
+     * }
+     * */
     fun handleAddImageRequest(request: HttpRequest): String {
         val body = gson.fromJson(
             request.body,
             AddImageRequestBody::class.java
         )
-        val fileName = SecurityUtilsImpl().bytesToString(SecurityUtilsImpl().generateSalt())
+        val fileName = "image${messengerRepository.getMaxId() + 1}.jpg"
         messengerRepository.addMessage(Message(
             room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
-            image = fileName,
-            value = "Image".encodeToByteArray(),
+            image = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName",
+            value = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName"
+                .encodeToByteArray(),
             owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
             from = SecurityUtilsImpl().bytesToString(body.owner),
             time = Calendar.getInstance().time.toString(),
             file = "no file".encodeToByteArray()
         ))
+        messengerRepository.addImage(fileName)
         try {
-            val file = File("/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName")
-            file.createNewFile()
-            FileOutputStream(file).write(body.image)
+            val file = File(
+                "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/$fileName"
+            )
+            ImageIO.write(
+                ImageIO.read(ByteArrayInputStream(body.image)),
+                "jpg",
+                file
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }

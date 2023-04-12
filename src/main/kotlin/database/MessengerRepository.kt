@@ -66,5 +66,18 @@ interface MessengerRepository {
      * */
     fun getRoomsByUser(user: User): List<Room>
 
+    /**
+     * [getUserByToken] - function for getting room by room token
+     * */
     fun getRoomByToken(token: String): Room
+
+    /**
+     * [addImage] - function for adding image Uri in database
+     * */
+    fun addImage(imageUri: String)
+
+    /**
+     * [getMaxId] - function for getting max id of image from table
+     * */
+    fun getMaxId(): Int
 }

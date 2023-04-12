@@ -397,7 +397,7 @@ class SQLiteMessengerRepository : MessengerRepository {
                     "delete from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
                         "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(message.room.token)}' " +
 //                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}='${securityUtils.bytesToString(message.owner.token)}' " +
-                        "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${securityUtils.bytesToString(message.file)}' " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${message.file.decodeToString()}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_TIME}='${message.time}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}='${message.value.decodeToString()}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_IMAGE}='${message.image}';"
@@ -452,7 +452,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             }
         }
 
-        return result.calculateSubList(pagination)
+        return result.calculateSubList(pagination).sortedBy { it.time }
     }
 
     private fun List<Message>.calculateSubList(pagination: IntRange): List<Message> {
@@ -544,6 +544,65 @@ class SQLiteMessengerRepository : MessengerRepository {
                         resultSet.getString(SQLiteContract.RoomsTable.COLUMN_TOKEN)
                     )
                 )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+
+        return result
+    }
+
+    override fun addImage(imageUri: String) {
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                it.execute(
+                    "insert into ${SQLiteContract.ImagesTable.TABLE_NAME} (" +
+                            SQLiteContract.ImagesTable.COLUMN_IMAGE +
+                        ") values (" +
+                            "'$imageUri'" +
+                        ");"
+                )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override fun getMaxId(): Int {
+        var result = 0
+
+        try {
+            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "SELECT ${SQLiteContract.ImagesTable.COLUMN_ID} " +
+                        "FROM ${SQLiteContract.ImagesTable.TABLE_NAME} " +
+                        "WHERE ${SQLiteContract.ImagesTable.COLUMN_ID}=(" +
+                            "SELECT max(${SQLiteContract.ImagesTable.COLUMN_ID}) " +
+                            "FROM ${SQLiteContract.ImagesTable.TABLE_NAME}" +
+                        ");"
+                )
+
+                result = resultSet.getInt(SQLiteContract.ImagesTable.COLUMN_ID)
             }
         } catch (e: SQLException) {
             e.printStackTrace()
