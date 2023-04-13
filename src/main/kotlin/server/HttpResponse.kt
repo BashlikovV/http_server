@@ -70,7 +70,8 @@ class HttpResponse {
      * {
      *      "username":"<username>"
      *      "email":"<email>",
-     *      "password":"<password>"
+     *      "password":"<password>",
+     *      "image":"<image_uri>"
      * }
      * */
     fun handleSignUpRequest(request: HttpRequest): String {
@@ -83,7 +84,8 @@ class HttpResponse {
             messengerRepository.signUp(
                 email = body.email,
                 username = body.username,
-                password = body.password
+                password = body.password,
+                imageUri = body.image
             )
             gson.toJson(SignInResponseBody("200 OK"))
         } catch (e: Exception) {
@@ -409,7 +411,11 @@ class HttpResponse {
             request.body,
             AddImageRequestBody::class.java
         )
-        val fileName = "image${messengerRepository.getMaxId() + 1}.jpg"
+        val fileName = if (body.owner.decodeToString().contains("@")) {
+            "${body.owner.decodeToString()}.jpg"
+        } else {
+            "image${messengerRepository.getMaxId() + 1}.jpg"
+        }
         messengerRepository.addImage(fileName)
         try {
             val file = File(
@@ -420,21 +426,25 @@ class HttpResponse {
                 "jpg",
                 file
             )
-            messengerRepository.addMessage(
-                Message(
-                    room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
-                    image = "${Repository.IMAGES_DIRECTORY}$fileName",
-                    value = "${Repository.IMAGES_DIRECTORY}$fileName"
-                        .encodeToByteArray(),
-                    owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
-                    from = SecurityUtilsImpl().bytesToString(body.owner),
-                    time = Calendar.getInstance().time.toString(),
-                    file = "no file".encodeToByteArray()
+            if (!body.owner.decodeToString().contains("@")) {
+                messengerRepository.addMessage(
+                    Message(
+                        room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
+                        image = "${Repository.IMAGES_DIRECTORY}$fileName",
+                        value = "${Repository.IMAGES_DIRECTORY}$fileName"
+                            .encodeToByteArray(),
+                        owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
+                        from = SecurityUtilsImpl().bytesToString(body.owner),
+                        time = Calendar.getInstance().time.toString(),
+                        file = "no file".encodeToByteArray()
+                    )
                 )
-            )
+            } else {
+                return gson.toJson(AddImageResponseBody("${Repository.IMAGES_DIRECTORY}$fileName".encodeToByteArray()))
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return gson.toJson("OK")
+        return gson.toJson(AddImageResponseBody("${Repository.IMAGES_DIRECTORY}$fileName".encodeToByteArray()))
     }
 }
