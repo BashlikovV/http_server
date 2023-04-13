@@ -12,6 +12,7 @@ object SQLiteContract {
         const val COLUMN_TOKEN = "token"
         const val COLUMN_SALT = "salt"
         const val COLUMN_CREATED_AT = "createdAt"
+        const val COLUMN_IMAGE = "image"
     }
 
     object RoomsTable {
