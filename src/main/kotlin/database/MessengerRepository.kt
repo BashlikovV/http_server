@@ -9,7 +9,7 @@ interface MessengerRepository {
     /**
      * [signUp] - function for create new account in database
      * */
-    fun signUp(email: String, password: String, username: String)
+    fun signUp(email: String, password: String, username: String, imageUri: String)
 
     /**
      * [signIn] - function for getting token by email and password

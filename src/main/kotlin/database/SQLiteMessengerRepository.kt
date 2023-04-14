@@ -17,7 +17,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     val securityUtils = SecurityUtilsImpl()
 
-    override fun signUp(email: String, password: String, username: String) {
+    override fun signUp(email: String, password: String, username: String, imageUri: String) {
         try {
             connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
             val statement = connection.createStatement()
@@ -37,10 +37,11 @@ class SQLiteMessengerRepository : MessengerRepository {
                         "${SQLiteContract.UsersTable.COLUMN_EMAIL}," +
                         "${SQLiteContract.UsersTable.COLUMN_TOKEN}," +
                         "${SQLiteContract.UsersTable.COLUMN_SALT}," +
-                        SQLiteContract.UsersTable.COLUMN_CREATED_AT +
+                        "${SQLiteContract.UsersTable.COLUMN_CREATED_AT}," +
+                        SQLiteContract.UsersTable.COLUMN_IMAGE +
                     ") values (" +
                         "'$username', '$email', '${securityUtils.bytesToString(token)}', " +
-                        "'${securityUtils.bytesToString(salt)}', '$time'"+
+                        "'${securityUtils.bytesToString(salt)}', '$time', '$imageUri'" +
                     ");"
                 )
             }
@@ -129,7 +130,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                         email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
                         token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
                         salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
-                        createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                        createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
+                        image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
                     )
                 }
             } else {
@@ -169,7 +171,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                     email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL) ?: "",
                     token = securityUtils.stringToBytes(token),
                     salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
-                    createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                    createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
+                    image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
                 )
             }
         } catch (e: SQLException) {
@@ -230,7 +233,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                             email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
                             token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
                             salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
-                            createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                            createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
+                            image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
                         )
                     )
                 }
@@ -452,7 +456,7 @@ class SQLiteMessengerRepository : MessengerRepository {
             }
         }
 
-        return result.calculateSubList(pagination).sortedBy { it.time }
+        return result.calculateSubList(pagination)
     }
 
     private fun List<Message>.calculateSubList(pagination: IntRange): List<Message> {
