@@ -130,7 +130,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                         email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
                         token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
                         salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
-                        createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                        createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
+                        image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
                     )
                 }
             } else {
@@ -170,7 +171,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                     email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL) ?: "",
                     token = securityUtils.stringToBytes(token),
                     salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
-                    createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                    createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
+                    image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
                 )
             }
         } catch (e: SQLException) {
@@ -231,7 +233,8 @@ class SQLiteMessengerRepository : MessengerRepository {
                             email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
                             token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
                             salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
-                            createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT)
+                            createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
+                            image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
                         )
                     )
                 }
