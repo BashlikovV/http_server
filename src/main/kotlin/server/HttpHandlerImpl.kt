@@ -1,7 +1,7 @@
 package server
 
 class HttpHandlerImpl : HttpHandler {
-    override fun handle(request: HttpRequest, response: HttpResponse): String? {
+    override fun handle(request: HttpRequest, response: HttpResponse): String {
         return when (request.url.substringBefore("?").substringAfter("/")) {
             HttpContract.UrlMethods.SIGN_UP -> {
                 response.handleSignUpRequest(request = request)
