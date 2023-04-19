@@ -1,5 +1,6 @@
 import database.SQLiteContract
 import database.SQLiteMessengerRepository
+import database.entities.User
 import org.junit.jupiter.api.Test
 import utils.SecurityUtilsImpl
 import java.sql.Connection
@@ -51,7 +52,17 @@ class SQLiteMessengerRepositoryTest {
 
     @Test
     fun signInTest() {
+        var user: User? = null
+        try {
+            user = testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
+        assert(user != null)
     }
 
     private fun checkDatabaseContainsUser(
