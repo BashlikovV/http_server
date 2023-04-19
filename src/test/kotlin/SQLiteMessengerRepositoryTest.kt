@@ -202,6 +202,34 @@ class SQLiteMessengerRepositoryTest {
         assert(room != null)
     }
 
+    @Test
+    fun deleteRoomByTwoUsersTest() {
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+
+        var room: Room? = null
+        try {
+            testMessengerRepository.deleteRoomByTwoUsers(firstUser, secondUser)
+            room = testMessengerRepository.getRoomByTwoUsers(firstUser, secondUser)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        assert(room == null)
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
