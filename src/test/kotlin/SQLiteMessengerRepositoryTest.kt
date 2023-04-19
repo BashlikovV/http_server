@@ -376,6 +376,13 @@ class SQLiteMessengerRepositoryTest {
         assert(resultRoom == room)
     }
 
+    @Test
+    fun addImageTest() {
+        testMessengerRepository.addImage(TEST_IMAGE_URI)
+
+        assertEquals(true, checkDatabaseContainsImage(TEST_IMAGE_URI))
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
@@ -465,7 +472,6 @@ class SQLiteMessengerRepositoryTest {
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
-
             statement.use {
                 val resultSet = it.executeQuery(
                     "select * " +
@@ -477,6 +483,31 @@ class SQLiteMessengerRepositoryTest {
                         "and ${SQLiteContract.MessagesTable.COLUMN_TIME}=('${message.time}') " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}=('${securityUtils.bytesToString(message.owner.token)}') " +
                         "and \"${SQLiteContract.MessagesTable.COLUMN_FROM}\"=('${message.from}');"
+                )
+                return resultSet.next()
+            }
+        } catch (e: SQLException) {
+            throw e
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun checkDatabaseContainsImage(imageUri: String): Boolean {
+        try {
+            connection = DriverManager.getConnection(TEST_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "select * " +
+                        "from ${SQLiteContract.ImagesTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.ImagesTable.COLUMN_IMAGE}=('$imageUri');"
                 )
                 return resultSet.next()
             }
