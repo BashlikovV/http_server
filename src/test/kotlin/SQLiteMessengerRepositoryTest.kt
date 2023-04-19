@@ -383,6 +383,13 @@ class SQLiteMessengerRepositoryTest {
         assertEquals(true, checkDatabaseContainsImage(TEST_IMAGE_URI))
     }
 
+    @Test
+    fun getMaxIdTest() {
+        val maxId = testMessengerRepository.getMaxId()
+
+        assert(maxId > 0)
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
