@@ -65,6 +65,27 @@ class SQLiteMessengerRepositoryTest {
         assert(user != null)
     }
 
+    @Test
+    fun getUserByTokenTest() {
+        val userToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+
+        var user: User? = null
+        try {
+            user = testMessengerRepository.getUserByToken(
+                userToken
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        assert(user != null)
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
