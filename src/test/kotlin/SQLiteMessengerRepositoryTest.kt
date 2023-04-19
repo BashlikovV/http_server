@@ -269,6 +269,90 @@ class SQLiteMessengerRepositoryTest {
         assertEquals(true, checkDatabaseContainsMessage(message))
     }
 
+    @Test
+    fun deleteMessageTest() {
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+        val room = testMessengerRepository.getRoomByTwoUsers(firstUser, secondUser)
+
+        val message = Message(
+            room = room,
+            image = TEST_NO_IMAGE,
+            file = TEST_NO_FILE.encodeToByteArray(),
+            value = TEST_MESSAGE_VALUE.encodeToByteArray(),
+            owner = firstUser,
+            time = Calendar.getInstance().time.toString(),
+            from = firstUserToken
+        )
+
+        testMessengerRepository.deleteMessage(message)
+
+        assertEquals(false, checkDatabaseContainsMessage(message))
+    }
+
+    @Test
+    fun getMessagesByRoomTest(){
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+        val room = testMessengerRepository.getRoomByTwoUsers(firstUser, secondUser)
+        val message = Message(
+            room = room,
+            image = TEST_NO_IMAGE,
+            file = TEST_NO_FILE.encodeToByteArray(),
+            value = TEST_MESSAGE_VALUE.encodeToByteArray(),
+            owner = firstUser,
+            time = Calendar.getInstance().time.toString(),
+            from = firstUserToken
+        )
+
+        testMessengerRepository.addMessage(message)
+
+        val messages = testMessengerRepository.getMessagesByRoom(room, IntRange(0, 30))
+
+        assert(messages.isNotEmpty())
+
+        testMessengerRepository.deleteMessage(message)
+    }
+
+    @Test
+    fun getRoomsByUserTest() {
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+
+        val rooms = testMessengerRepository.getRoomsByUser(firstUser)
+
+        assert(rooms.isNotEmpty())
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
