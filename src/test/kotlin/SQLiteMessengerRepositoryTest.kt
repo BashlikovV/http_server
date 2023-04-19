@@ -16,6 +16,7 @@ class SQLiteMessengerRepositoryTest {
         const val TEST_EMAIL = "test_email@mail.com"
         const val TEST_PASSWORD = "test_password"
         const val TEST_USERNAME = "test_username"
+        const val TEST_UPDATED_USERNAME = "updated_username"
         const val TEST_IMAGE_URI =
             "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/adminPhoto.jpg"
     }
@@ -84,6 +85,43 @@ class SQLiteMessengerRepositoryTest {
         }
 
         assert(user != null)
+    }
+
+    @Test
+    fun updateUsernameByTokeTest() {
+        val userToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+
+        testMessengerRepository.updateUsernameByToken(
+            token = userToken,
+            username = TEST_UPDATED_USERNAME
+        )
+
+        var user: User? = null
+        try {
+            user = testMessengerRepository.getUserByToken(userToken)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        assertEquals(TEST_UPDATED_USERNAME, user?.username)
+
+        testMessengerRepository.updateUsernameByToken(
+            token = userToken,
+            username = TEST_USERNAME
+        )
+
+        try {
+            user = testMessengerRepository.getUserByToken(userToken)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        assertEquals(TEST_USERNAME, user?.username)
     }
 
     private fun checkDatabaseContainsUser(
