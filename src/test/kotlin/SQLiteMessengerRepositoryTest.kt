@@ -1,5 +1,6 @@
 import database.SQLiteContract
 import database.SQLiteMessengerRepository
+import database.entities.Room
 import database.entities.User
 import org.junit.jupiter.api.Test
 import utils.SecurityUtilsImpl
@@ -13,12 +14,17 @@ class SQLiteMessengerRepositoryTest {
 
     companion object {
         const val TEST_SQLITE_DATABASE_URL = "jdbc:sqlite:src/test/resources/test_database.db"
+
         const val TEST_EMAIL = "test_email@mail.com"
         const val TEST_PASSWORD = "test_password"
         const val TEST_USERNAME = "test_username"
         const val TEST_UPDATED_USERNAME = "updated_username"
         const val TEST_IMAGE_URI =
             "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/adminPhoto.jpg"
+
+        const val TEST_EMAIL_1 = "test_email_1@email.com"
+        const val TEST_PASSWORD_1 = "test_password_1"
+        const val TEST_USERNAME_1 = "test_username_1"
     }
 
     private val testMessengerRepository = SQLiteMessengerRepository(TEST_SQLITE_DATABASE_URL)
@@ -137,6 +143,65 @@ class SQLiteMessengerRepositoryTest {
         assert(users?.isNotEmpty() == true)
     }
 
+    @Test
+    fun addRoomTest() {
+        try {
+            testMessengerRepository.signUp(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1,
+                username = TEST_USERNAME_1,
+                imageUri = TEST_IMAGE_URI
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+
+        testMessengerRepository.addRoomByTwoUsers(firstUser, secondUser)
+
+        assertEquals(true, checkDatabaseContainsRoom(firstUser, secondUser))
+    }
+
+    @Test
+    fun getRoomByTwoUserTest() {
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+
+        var room: Room? = null
+        try {
+            room = testMessengerRepository.getRoomByTwoUsers(firstUser, secondUser)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        assert(room != null)
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
@@ -189,5 +254,34 @@ class SQLiteMessengerRepositoryTest {
         }
 
         return securityUtils.stringToBytes(result)
+    }
+
+    private fun checkDatabaseContainsRoom(user1: User, user2: User): Boolean {
+        try {
+            connection = DriverManager.getConnection(TEST_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "select * " +
+                        "from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}' " +
+                        "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user2.token)}';"
+                )
+                return resultSet.next()
+            }
+        } catch (e: SQLException) {
+            throw e
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
     }
 }
