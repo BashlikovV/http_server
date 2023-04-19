@@ -124,6 +124,19 @@ class SQLiteMessengerRepositoryTest {
         assertEquals(TEST_USERNAME, user?.username)
     }
 
+    @Test
+    fun getAllUsersTest() {
+        var users: List<User>? = null
+
+        try {
+            users = testMessengerRepository.getAllUsers()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        assert(users?.isNotEmpty() == true)
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
