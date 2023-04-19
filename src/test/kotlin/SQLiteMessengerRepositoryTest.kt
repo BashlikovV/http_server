@@ -1,5 +1,6 @@
 import database.SQLiteContract
 import database.SQLiteMessengerRepository
+import database.entities.Message
 import database.entities.Room
 import database.entities.User
 import org.junit.jupiter.api.Test
@@ -8,6 +9,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.sql.Statement
+import java.util.Calendar
 import kotlin.test.assertEquals
 
 class SQLiteMessengerRepositoryTest {
@@ -25,6 +27,10 @@ class SQLiteMessengerRepositoryTest {
         const val TEST_EMAIL_1 = "test_email_1@email.com"
         const val TEST_PASSWORD_1 = "test_password_1"
         const val TEST_USERNAME_1 = "test_username_1"
+
+        const val TEST_NO_IMAGE = "no image"
+        const val TEST_NO_FILE = "no file"
+        const val TEST_MESSAGE_VALUE = "test_value"
     }
 
     private val testMessengerRepository = SQLiteMessengerRepository(TEST_SQLITE_DATABASE_URL)
@@ -230,6 +236,39 @@ class SQLiteMessengerRepositoryTest {
         assert(room == null)
     }
 
+    @Test
+    fun addMessageTest() {
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+        val room = testMessengerRepository.getRoomByTwoUsers(firstUser, secondUser)
+
+        val message = Message(
+            room = room,
+            image = TEST_NO_IMAGE,
+            file = TEST_NO_FILE.encodeToByteArray(),
+            value = TEST_MESSAGE_VALUE.encodeToByteArray(),
+            owner = firstUser,
+            time = Calendar.getInstance().time.toString(),
+            from = firstUserToken
+        )
+
+        testMessengerRepository.addMessage(message)
+
+        assertEquals(true, checkDatabaseContainsMessage(message))
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
@@ -299,6 +338,38 @@ class SQLiteMessengerRepositoryTest {
                         "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}' " +
                         "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user1.token)}' " +
                         "and ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user2.token)}';"
+                )
+                return resultSet.next()
+            }
+        } catch (e: SQLException) {
+            throw e
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun checkDatabaseContainsMessage(message: Message): Boolean {
+        try {
+            connection = DriverManager.getConnection(TEST_SQLITE_DATABASE_URL)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+
+            statement.use {
+                val resultSet = it.executeQuery(
+                    "select * " +
+                        "from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}=('${securityUtils.bytesToString(message.room.token)}') " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}=('${message.value.decodeToString()}') " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_IMAGE}=('${message.image}') " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_FILE}=('${message.file.decodeToString()}') " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_TIME}=('${message.time}') " +
+                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}=('${securityUtils.bytesToString(message.owner.token)}') " +
+                        "and \"${SQLiteContract.MessagesTable.COLUMN_FROM}\"=('${message.from}');"
                 )
                 return resultSet.next()
             }
