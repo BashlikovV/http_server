@@ -353,6 +353,29 @@ class SQLiteMessengerRepositoryTest {
         assert(rooms.isNotEmpty())
     }
 
+    @Test
+    fun getRoomByTokenTest() {
+        val firstUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+        val secondUserToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL_1,
+                password = TEST_PASSWORD_1
+            ).token
+        )
+        val firstUser = testMessengerRepository.getUserByToken(firstUserToken)
+        val secondUser = testMessengerRepository.getUserByToken(secondUserToken)
+        val room = testMessengerRepository.getRoomByTwoUsers(firstUser, secondUser)
+
+        val resultRoom = testMessengerRepository.getRoomByToken(securityUtils.bytesToString(room.token))
+
+        assert(resultRoom == room)
+    }
+
     private fun checkDatabaseContainsUser(
         email: String, password: String, username: String, imageUri: String
     ): Boolean {
