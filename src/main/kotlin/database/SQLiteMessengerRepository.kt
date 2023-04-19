@@ -11,7 +11,9 @@ import java.sql.SQLException
 import java.sql.Statement
 import java.util.*
 
-class SQLiteMessengerRepository : MessengerRepository {
+class SQLiteMessengerRepository(
+    private val databaseUrl: String = SQLiteContract.MESSENGER_SQLITE_DATABASE_URL
+) : MessengerRepository {
 
     private lateinit var connection: Connection
 
@@ -19,7 +21,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     override fun signUp(email: String, password: String, username: String, imageUri: String) {
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -78,7 +80,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var result = ""
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -112,7 +114,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var result = User()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -154,7 +156,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var result = User()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -190,7 +192,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     override fun updateUsernameByToken(token: String, username: String) {
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -216,7 +218,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         val result = mutableListOf<User>()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -256,7 +258,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var result = Room()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -291,7 +293,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     override fun deleteRoomByTwoUsers(user1: User, user2: User) {
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -319,7 +321,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var roomToken = byteArrayOf()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -353,7 +355,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     override fun addMessage(message: Message) {
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -392,7 +394,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     override fun deleteMessage(message: Message) {
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -422,7 +424,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         val result = mutableListOf<Message>()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -483,7 +485,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         val result = mutableListOf<Room>()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -527,7 +529,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var result = Room()
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -564,7 +566,7 @@ class SQLiteMessengerRepository : MessengerRepository {
 
     override fun addImage(imageUri: String) {
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
@@ -592,7 +594,7 @@ class SQLiteMessengerRepository : MessengerRepository {
         var result = 0
 
         try {
-            connection = DriverManager.getConnection(SQLiteContract.MESSENGER_SQLITE_DATABASE_URL)
+            connection = DriverManager.getConnection(databaseUrl)
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
