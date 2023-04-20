@@ -39,6 +39,10 @@ class ServerTest {
         const val TEST_EMAIL_1 = "test_email_1@email.com"
         const val TEST_PASSWORD_1 = "test_password_1"
         const val TEST_USERNAME_1 = "test_username_1"
+
+        const val TEST_NO_IMAGE = "no image"
+        const val TEST_NO_FILE = "no file"
+        const val TEST_MESSAGE_VALUE = "test_value"
     }
 
     private val thread = thread(start = true) {
@@ -143,18 +147,7 @@ class ServerTest {
     fun addRoomByTwoUsersTest() {
         val randomInt = Random().nextInt().toString()
 
-        testMessengerRepository.signUp(
-            email = TEST_EMAIL + randomInt,
-            password = TEST_PASSWORD,
-            username = TEST_EMAIL + randomInt,
-            imageUri = TEST_IMAGE_URI
-        )
-        testMessengerRepository.signUp(
-            email = TEST_EMAIL_1 + randomInt,
-            password = TEST_PASSWORD_1,
-            username = TEST_EMAIL_1 + randomInt,
-            imageUri = TEST_IMAGE_URI
-        )
+        addTwoRandomUsers(randomInt)
 
         val firstUser = testMessengerRepository.signIn(
             email = TEST_EMAIL + randomInt,
@@ -172,6 +165,38 @@ class ServerTest {
         val request = Request.Builder()
             .post(addRoomRequestBody.toJsonRequestBody())
             .endpoint("/${HttpContract.UrlMethods.ADD_ROOM}")
+            .build()
+        var response: Response? = null
+        try {
+            response = client.newCall(request).execute()
+        } catch (_: Exception) {  }
+
+        assert(response!!.isSuccessful)
+    }
+
+    @Test
+    fun addMessageTest() {
+        val testUser = testMessengerRepository.signIn(
+            email = TEST_EMAIL,
+            password = TEST_PASSWORD
+        )
+        val testReceiver = testMessengerRepository.signIn(
+            email = TEST_EMAIL_1,
+            password = TEST_PASSWORD_1
+        )
+
+        val addMessageRequestBody = AddMessageRequestBody(
+            image = TEST_NO_IMAGE,
+            file = TEST_NO_FILE.encodeToByteArray(),
+            value = TEST_MESSAGE_VALUE,
+            time = Calendar.getInstance().time.toString(),
+            owner = securityUtils.bytesToString(testUser.token),
+            from = securityUtils.bytesToString(testUser.token),
+            receiver = securityUtils.bytesToString(testReceiver.token)
+        )
+        val request = Request.Builder()
+            .post(addMessageRequestBody.toJsonRequestBody())
+            .endpoint("/${HttpContract.UrlMethods.ADD_MESSAGE}")
             .build()
         var response: Response? = null
         try {
@@ -200,6 +225,21 @@ class ServerTest {
             .readTimeout(1000, TimeUnit.MILLISECONDS)
             .retryOnConnectionFailure(true)
             .build()
+    }
+
+    private fun addTwoRandomUsers(randomInt: String) {
+        testMessengerRepository.signUp(
+            email = TEST_EMAIL + randomInt,
+            password = TEST_PASSWORD,
+            username = TEST_USERNAME,
+            imageUri = TEST_IMAGE_URI
+        )
+        testMessengerRepository.signUp(
+            email = TEST_EMAIL_1 + randomInt,
+            password = TEST_PASSWORD_1,
+            username = TEST_USERNAME_1,
+            imageUri = TEST_IMAGE_URI
+        )
     }
 
     init {
