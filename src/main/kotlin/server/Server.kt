@@ -1,6 +1,7 @@
 package server
 
 import Repository
+import database.SQLiteContract
 import okio.ByteString.Companion.toByteString
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -11,6 +12,9 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
 
 class Server(
+    private val ip: String = Repository.IP_ADDRESS,
+    private val port: Int = Repository.PORT,
+    private val databaseUrl: String = SQLiteContract.MESSENGER_SQLITE_DATABASE_URL,
     private val handler: HttpHandler?
 ) {
 
@@ -23,7 +27,7 @@ class Server(
     fun bootstrap() {
         try {
             server = ServerSocket()
-            server.bind(InetSocketAddress(Repository.IP_ADDRESS, Repository.PORT))
+            server.bind(InetSocketAddress(ip, port))
             while (true) {
                 val socket = server.accept()
                 ClientHandler(socket)
@@ -86,7 +90,7 @@ class Server(
                 }
 
                 val request = HttpRequest(builder.toString(), false)
-                val response = HttpResponse()
+                val response = HttpResponse(databaseUrl)
 
                 if (handler != null) {
                     try {

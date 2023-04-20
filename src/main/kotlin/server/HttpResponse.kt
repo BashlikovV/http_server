@@ -2,6 +2,7 @@ package server
 
 import Repository
 import com.google.gson.GsonBuilder
+import database.SQLiteContract
 import database.SQLiteMessengerRepository
 import database.entities.Message
 import database.entities.Room
@@ -16,9 +17,11 @@ import java.nio.ByteBuffer
 import java.util.*
 import javax.imageio.ImageIO
 
-class HttpResponse {
+class HttpResponse(
+    databaseUrl: String = SQLiteContract.MESSENGER_SQLITE_DATABASE_URL
+) {
 
-    private val messengerRepository = SQLiteMessengerRepository()
+    private val messengerRepository = SQLiteMessengerRepository(databaseUrl)
 
     private val gson = GsonBuilder().setLenient().create()
 
@@ -121,8 +124,7 @@ class HttpResponse {
     /**
      * POST /room-messages
      * {
-     *      "user1":"<user_token>"
-     *      "user2":"<user_token>"
+     *      "room":"<room_token>"
      * }
      * */
     fun handleGetRoomMessagesRequest(request: HttpRequest): String {
@@ -141,7 +143,6 @@ class HttpResponse {
         } catch (e: Exception) {
             gson.toJson(RoomMessagesResponseBody(listOf()))
         }
-        println("ress: ${result.length}")
         return result
     }
 
