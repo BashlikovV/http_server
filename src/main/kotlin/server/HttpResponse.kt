@@ -124,8 +124,7 @@ class HttpResponse(
     /**
      * POST /room-messages
      * {
-     *      "user1":"<user_token>"
-     *      "user2":"<user_token>"
+     *      "room":"<room_token>"
      * }
      * */
     fun handleGetRoomMessagesRequest(request: HttpRequest): String {
@@ -144,7 +143,6 @@ class HttpResponse(
         } catch (e: Exception) {
             gson.toJson(RoomMessagesResponseBody(listOf()))
         }
-        println("ress: ${result.length}")
         return result
     }
 
