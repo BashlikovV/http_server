@@ -1,5 +1,6 @@
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import database.SQLiteMessengerRepository
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -7,19 +8,23 @@ import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.junit.jupiter.api.Test
-import server.HttpHandlerImpl
-import server.HttpRequest
-import server.HttpResponse
-import server.Server
+import server.*
+import server.entities.GetRoomsRequestBody
+import server.entities.RoomMessagesRequestBody
 import server.entities.SignInRequestBody
 import server.entities.SignUpRequestBody
+import utils.SecurityUtilsImpl
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class ServerTest {
 
+    private val testMessengerRepository = SQLiteMessengerRepository(TEST_SQLITE_DATABASE_URL)
+
     private val gson: Gson = GsonBuilder().setLenient().create()
+
+    private val securityUtils = SecurityUtilsImpl()
 
     private val client = createOkHttpClient()
 
@@ -57,7 +62,7 @@ class ServerTest {
         )
         val request = Request.Builder()
             .post(signUpRequestBody.toJsonRequestBody())
-            .endpoint("/sign-up")
+            .endpoint("/${HttpContract.UrlMethods.SIGN_UP}")
             .build()
         var response: Response? = null
         try {
@@ -75,7 +80,55 @@ class ServerTest {
         )
         val request = Request.Builder()
             .post(signInRequestBody.toJsonRequestBody())
-            .endpoint("/sign-in")
+            .endpoint("/${HttpContract.UrlMethods.SIGN_IN}")
+            .build()
+        var response: Response? = null
+        try {
+            response = client.newCall(request).execute()
+        } catch (_: Exception) {  }
+
+        assert(response!!.isSuccessful)
+    }
+
+    @Test
+    fun getRoomMessagesTest() {
+        val user = testMessengerRepository.signIn(
+            email = TEST_EMAIL,
+            password = TEST_PASSWORD
+        )
+        val rooms = testMessengerRepository.getRoomsByUser(user)
+
+        val getRoomMessagesRequestBody = RoomMessagesRequestBody(
+            room = securityUtils.bytesToString(rooms.random().token),
+            pagination = IntRange(0, 1)
+        )
+        val request = Request.Builder()
+            .post(getRoomMessagesRequestBody.toJsonRequestBody())
+            .endpoint("/${HttpContract.UrlMethods.ROOM_MESSAGES}")
+            .build()
+        var response: Response? = null
+        try {
+            response = client.newCall(request).execute()
+        } catch (_: Exception) {  }
+
+        assert(response!!.isSuccessful)
+    }
+
+    @Test
+    fun getRoomsByUserTest() {
+        val userToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
+
+        val getRoomsRequestBody = GetRoomsRequestBody(
+            user = userToken
+        )
+        val request = Request.Builder()
+            .post(getRoomsRequestBody.toJsonRequestBody())
+            .endpoint("/${HttpContract.UrlMethods.GET_ROOMS}")
             .build()
         var response: Response? = null
         try {
