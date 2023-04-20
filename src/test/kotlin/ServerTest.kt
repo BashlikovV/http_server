@@ -9,10 +9,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.junit.jupiter.api.Test
 import server.*
-import server.entities.GetRoomsRequestBody
-import server.entities.RoomMessagesRequestBody
-import server.entities.SignInRequestBody
-import server.entities.SignUpRequestBody
+import server.entities.*
 import utils.SecurityUtilsImpl
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -38,6 +35,10 @@ class ServerTest {
         const val TEST_USERNAME = "test_username"
         const val TEST_IMAGE_URI =
             "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/adminPhoto.jpg"
+
+        const val TEST_EMAIL_1 = "test_email_1@email.com"
+        const val TEST_PASSWORD_1 = "test_password_1"
+        const val TEST_USERNAME_1 = "test_username_1"
     }
 
     private val thread = thread(start = true) {
@@ -129,6 +130,48 @@ class ServerTest {
         val request = Request.Builder()
             .post(getRoomsRequestBody.toJsonRequestBody())
             .endpoint("/${HttpContract.UrlMethods.GET_ROOMS}")
+            .build()
+        var response: Response? = null
+        try {
+            response = client.newCall(request).execute()
+        } catch (_: Exception) {  }
+
+        assert(response!!.isSuccessful)
+    }
+
+    @Test
+    fun addRoomByTwoUsersTest() {
+        val randomInt = Random().nextInt().toString()
+
+        testMessengerRepository.signUp(
+            email = TEST_EMAIL + randomInt,
+            password = TEST_PASSWORD,
+            username = TEST_EMAIL + randomInt,
+            imageUri = TEST_IMAGE_URI
+        )
+        testMessengerRepository.signUp(
+            email = TEST_EMAIL_1 + randomInt,
+            password = TEST_PASSWORD_1,
+            username = TEST_EMAIL_1 + randomInt,
+            imageUri = TEST_IMAGE_URI
+        )
+
+        val firstUser = testMessengerRepository.signIn(
+            email = TEST_EMAIL + randomInt,
+            password = TEST_PASSWORD
+        )
+        val secondUser = testMessengerRepository.signIn(
+            email = TEST_EMAIL_1 + randomInt,
+            password = TEST_PASSWORD_1
+        )
+
+        val addRoomRequestBody = AddRoomRequestBody(
+            user1 = securityUtils.bytesToString(firstUser.token)   ,
+            user2 = securityUtils.bytesToString(secondUser.token)
+        )
+        val request = Request.Builder()
+            .post(addRoomRequestBody.toJsonRequestBody())
+            .endpoint("/${HttpContract.UrlMethods.ADD_ROOM}")
             .build()
         var response: Response? = null
         try {
