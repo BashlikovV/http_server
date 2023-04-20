@@ -206,6 +206,28 @@ class ServerTest {
         assert(response!!.isSuccessful)
     }
 
+    @Test
+    fun getAllUsersTest() {
+        val testUser = testMessengerRepository.signIn(
+            email = TEST_EMAIL,
+            password = TEST_PASSWORD
+        )
+
+        val getUsersRequestBody = GetUserRequestBody(
+            token = securityUtils.bytesToString(testUser.token)
+        )
+        val request = Request.Builder()
+            .post(getUsersRequestBody.toJsonRequestBody())
+            .endpoint("/${HttpContract.UrlMethods.GET_USERS}")
+            .build()
+        var response: Response? = null
+        try {
+            response = client.newCall(request).execute()
+        } catch (_: Exception) {  }
+
+        assert(response!!.isSuccessful)
+    }
+
     private fun Request.Builder.endpoint(endpoint: String): Request.Builder {
         url("http://${Repository.IP_ADDRESS}:${Repository.PORT}$endpoint")
         return this
