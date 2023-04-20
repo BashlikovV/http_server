@@ -2,6 +2,7 @@ package server
 
 import Repository
 import com.google.gson.GsonBuilder
+import database.SQLiteContract
 import database.SQLiteMessengerRepository
 import database.entities.Message
 import database.entities.Room
@@ -16,9 +17,11 @@ import java.nio.ByteBuffer
 import java.util.*
 import javax.imageio.ImageIO
 
-class HttpResponse {
+class HttpResponse(
+    databaseUrl: String = SQLiteContract.MESSENGER_SQLITE_DATABASE_URL
+) {
 
-    private val messengerRepository = SQLiteMessengerRepository()
+    private val messengerRepository = SQLiteMessengerRepository(databaseUrl)
 
     private val gson = GsonBuilder().setLenient().create()
 
