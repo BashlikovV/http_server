@@ -17,16 +17,6 @@ import kotlin.concurrent.thread
 
 class ServerTest {
 
-    private val testMessengerRepository = SQLiteMessengerRepository(TEST_SQLITE_DATABASE_URL)
-
-    private val gson: Gson = GsonBuilder().setLenient().create()
-
-    private val securityUtils = SecurityUtilsImpl()
-
-    private val client = createOkHttpClient()
-
-    private val contentType = "application/json; charset=utf-8".toMediaType()
-
     companion object {
         const val TEST_SQLITE_DATABASE_URL = "jdbc:sqlite:src/test/resources/test_database.db"
 
@@ -44,6 +34,16 @@ class ServerTest {
         const val TEST_NO_FILE = "no file"
         const val TEST_MESSAGE_VALUE = "test_value"
     }
+
+    private val testMessengerRepository = SQLiteMessengerRepository(TEST_SQLITE_DATABASE_URL)
+
+    private val gson: Gson = GsonBuilder().setLenient().create()
+
+    private val securityUtils = SecurityUtilsImpl()
+
+    private val client = createOkHttpClient()
+
+    private val contentType = "application/json; charset=utf-8".toMediaType()
 
     private val thread = thread(start = true) {
         Server(
