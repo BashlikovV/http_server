@@ -3,6 +3,7 @@ package server
 import Repository
 import database.SQLiteContract
 import okio.ByteString.Companion.toByteString
+import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -60,7 +61,7 @@ class Server(
 
             while (!socket.isClosed) {
                 val buffer = ByteArray(BUFFER_SIZE)
-                var builder = StringBuilder()
+                val builder = StringBuilder()
                 var keepReading = true
 
                 while (keepReading) {
@@ -69,24 +70,28 @@ class Server(
                     keepReading = readResult == BUFFER_SIZE
                     val charBuffer = StandardCharsets.UTF_8.decode(buffer.toByteString().asByteBuffer())
                     builder.append(charBuffer)
-
                     buffer.fill(0)
                 }
 
                 if (builder.toString().contains("multipart/mixed")) {
+                    val time = System.currentTimeMillis()
                     val tmp = HttpRequest(builder.toString(), true)
-                    val size = tmp.headers["Content-Length"]!!.toInt()
+                    val size = tmp.headers["Content-Length"]!!.toInt() - tmp.length
                     val bytes = ByteArray(262144)
+                    val value = ByteArrayOutputStream()
                     var readSize = 0
-                    while (readSize != size) {
+                    while (readSize < size) {
                         val count = inputStream.read(bytes)
-                        if (count == -1) break
-                        builder.append(bytes.decodeToString())
-                        bytes.fill(0)
-                        readSize += count
+                        if (count > 0) {
+                            value.write(bytes, 0, count)
+                            readSize += count
+                        }
                     }
-                    builder = java.lang.StringBuilder().append(builder.toString().substringBeforeLast("}"))
-                    builder.append("}")
+                    builder.apply {
+                        append(value.toByteArray().decodeToString().substringBeforeLast("}"))
+                        append("}")
+                    }
+                    println(System.currentTimeMillis() - time)
                 }
 
                 val request = HttpRequest(builder.toString(), false)
@@ -96,7 +101,7 @@ class Server(
                     try {
                         if (request.method == HttpMethod.GET) {
                             try {
-                                WebSocketHandlerImpl().handle(request, response)?.let {
+                                WebSocketHandlerImpl().handle(request, response).let {
                                     stream.write(it)
                                 }
                             } catch (e: Exception) {
