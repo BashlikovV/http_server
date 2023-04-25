@@ -11,6 +11,7 @@ class HttpRequest(
     val url: String
     val headers: Map<String, String>
     val body: String
+    var length: Int = 0
 
     companion object {
         private const val DELIMITER = "\r\n\r\n"
@@ -20,6 +21,7 @@ class HttpRequest(
 
     init {
         val parts = message.split(DELIMITER)
+        length = parts.sumOf { it.length }
         val head = if (isMultipartBody) {
             parts.first() + parts[1]
         } else {
@@ -40,7 +42,7 @@ class HttpRequest(
         this.body = if (parts.size > 1) {
             try {
                 String(
-                    parts.last().trim().toByteArray().filter { it != 0.toByte() }.toByteArray()
+                    parts.last().toByteArray().filter { it != 0.toByte() }.toByteArray()
                 )
             } catch (_: Exception) {
                 ""
@@ -48,9 +50,5 @@ class HttpRequest(
         } else {
             ""
         }
-    }
-
-    fun isOpen(): Boolean {
-        return headers["Connection"] == "Keep-Alive"
     }
 }
