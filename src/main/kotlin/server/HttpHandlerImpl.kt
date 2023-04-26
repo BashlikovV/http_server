@@ -42,6 +42,9 @@ class HttpHandlerImpl : HttpHandler {
             HttpContract.UrlMethods.ADD_IMAGE -> {
                 response.handleAddImageRequest(request = request)
             }
+            HttpContract.UrlMethods.UPDATE_USERNAME -> {
+                response.handleUpdateUsernameRequest(request = request)
+            }
             else -> {
                 "Error"
             }
