@@ -448,4 +448,26 @@ class HttpResponse(
         }
         return gson.toJson(AddImageResponseBody("${Repository.IMAGES_DIRECTORY}$fileName".encodeToByteArray()))
     }
+
+    /**
+     * POST /update-username
+     * {
+     *      "token":"<user_token>",
+     *      "newName":"<String>"
+     * }
+     * */
+    fun handleUpdateUsernameRequest(request: HttpRequest): String {
+        val result: String = try {
+            val body = gson.fromJson(
+                request.body,
+                UpdateUsernameRequestBody::class.java
+            )
+            messengerRepository.updateUsernameByToken(body.token, body.newName)
+            gson.toJson(DeleteMessageResponseBody("200 OK"))
+        } catch (e: Exception) {
+            gson.toJson(DeleteMessageResponseBody("500 ERROR"))
+        }
+
+        return result
+    }
 }
