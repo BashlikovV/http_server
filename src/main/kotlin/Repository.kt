@@ -2,7 +2,9 @@ object Repository {
 
 //    const val IP_ADDRESS = "192.168.100.7"
     const val PORT = 8080
-    const val IP_ADDRESS = "192.168.52.112"
+    const val IP_ADDRESS = "192.168.88.112"
+
+//    const val IP_ADDRESS = "172.17.96.89"
 
     const val IMAGES_DIRECTORY = "/home/bashlykovvv/IntelliJIDEAProjects/http_server/src/main/resources/images/"
 }

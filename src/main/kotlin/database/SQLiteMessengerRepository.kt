@@ -297,13 +297,21 @@ class SQLiteMessengerRepository(
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
+            val room = getRoomByTwoUsers(user1, user2)
+
             statement.use {
                 it.execute(
                     "delete from ${SQLiteContract.RoomsTable.TABLE_NAME} " +
                         "where ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user1.token)}' " +
                         "and ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user2.token)}' " +
-                         "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user1.token)}' " +
-                         "and ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user2.token)}';"
+                        "or ${SQLiteContract.RoomsTable.COLUMN_USER_2}='${securityUtils.bytesToString(user1.token)}' " +
+                        "and ${SQLiteContract.RoomsTable.COLUMN_USER_1}='${securityUtils.bytesToString(user2.token)}';"
+                )
+            }
+            statement.use {
+                it.execute(
+                    "delete from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
+                        "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(room.token)}';"
                 )
             }
         } catch (e: SQLException) {

@@ -46,7 +46,7 @@ class Server(
 
     inner class ClientHandler(
         private val socket: Socket
-    ) : Thread() {
+    ) : Thread(), Runnable {
 
         init {
             start()
