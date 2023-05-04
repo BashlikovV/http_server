@@ -45,6 +45,9 @@ class HttpHandlerImpl : HttpHandler {
             HttpContract.UrlMethods.UPDATE_USERNAME -> {
                 response.handleUpdateUsernameRequest(request = request)
             }
+            HttpContract.UrlMethods.READ_MESSAGES -> {
+                response.handleReadMessagesRequest(request = request)
+            }
             else -> {
                 "Error"
             }

@@ -8,5 +8,6 @@ data class RoomMessagesRequestBody(
 )
 
 data class RoomMessagesResponseBody(
-    val messages: List<Message>
+    val messages: List<Message>,
+    val unreadMessagesCount: Int
 )

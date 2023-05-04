@@ -139,9 +139,9 @@ class HttpResponse(
             val room = messengerRepository.getRoomByToken(body.room)
             val messages = messengerRepository.getMessagesByRoom(room, body.pagination)
 
-            result = gson.toJson(RoomMessagesResponseBody(messages))
+            result = gson.toJson(RoomMessagesResponseBody(messages, messages.count { !it.isRead }))
         } catch (e: Exception) {
-            gson.toJson(RoomMessagesResponseBody(listOf()))
+            gson.toJson(RoomMessagesResponseBody(listOf(), 0))
         }
         return result
     }
@@ -463,6 +463,22 @@ class HttpResponse(
                 UpdateUsernameRequestBody::class.java
             )
             messengerRepository.updateUsernameByToken(body.token, body.newName)
+            gson.toJson(DeleteMessageResponseBody("200 OK"))
+        } catch (e: Exception) {
+            gson.toJson(DeleteMessageResponseBody("500 ERROR"))
+        }
+
+        return result
+    }
+
+    fun handleReadMessagesRequest(request: HttpRequest): String {
+        val result: String = try {
+            val body = gson.fromJson(
+                request.body,
+                ReadMessagesRequestBody::class.java
+            )
+            val room = messengerRepository.getRoomByToken(body.room)
+            messengerRepository.readRoomMessages(room)
             gson.toJson(DeleteMessageResponseBody("200 OK"))
         } catch (e: Exception) {
             gson.toJson(DeleteMessageResponseBody("500 ERROR"))

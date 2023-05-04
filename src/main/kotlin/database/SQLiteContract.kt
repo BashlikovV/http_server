@@ -31,6 +31,7 @@ object SQLiteContract {
         const val COLUMN_OWNER = "owner"
         const val COLUMN_TIME = "time"
         const val COLUMN_FROM = "from"
+        const val COLUMN_IS_READ = "isRead"
     }
 
     object ImagesTable {

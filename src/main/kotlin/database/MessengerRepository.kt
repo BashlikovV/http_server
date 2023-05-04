@@ -80,4 +80,9 @@ interface MessengerRepository {
      * [getMaxId] - function for getting max id of image from table
      * */
     fun getMaxId(): Int
+
+    /**
+    * [readRoomMessages] - mark all messages of room as read
+    * */
+    fun readRoomMessages(room: Room)
 }
