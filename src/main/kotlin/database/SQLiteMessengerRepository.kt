@@ -377,7 +377,8 @@ class SQLiteMessengerRepository(
                             "${SQLiteContract.MessagesTable.COLUMN_FILE}, " +
                             "${SQLiteContract.MessagesTable.COLUMN_OWNER}, " +
                             "${SQLiteContract.MessagesTable.COLUMN_TIME}, " +
-                            from +
+                            "$from, " +
+                            SQLiteContract.MessagesTable.COLUMN_IS_READ +
                         ") values (" +
                             "'${securityUtils.bytesToString(message.room.token)}', " +
                             "'${message.image}', " +
@@ -385,7 +386,8 @@ class SQLiteMessengerRepository(
                             "'${message.file.decodeToString()}', " +
                             "'${securityUtils.bytesToString(message.owner.token)}', " +
                             "'${message.time}', " +
-                            "'${message.from}'" +
+                            "'${message.from}', " +
+                            "'0'" +
                         ");"
                 )
             }
@@ -410,7 +412,6 @@ class SQLiteMessengerRepository(
                 it.execute(
                     "delete from ${SQLiteContract.MessagesTable.TABLE_NAME} " +
                         "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}='${securityUtils.bytesToString(message.room.token)}' " +
-//                        "and ${SQLiteContract.MessagesTable.COLUMN_OWNER}='${securityUtils.bytesToString(message.owner.token)}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_FILE}='${message.file.decodeToString()}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_TIME}='${message.time}' " +
                         "and ${SQLiteContract.MessagesTable.COLUMN_VALUE}='${message.value.decodeToString()}' " +
@@ -451,7 +452,8 @@ class SQLiteMessengerRepository(
                             file = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FILE).encodeToByteArray(),
                             owner = room.user1,
                             time = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_TIME),
-                            from = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FROM)
+                            from = resultSet.getString(SQLiteContract.MessagesTable.COLUMN_FROM),
+                            isRead = resultSet.getInt(SQLiteContract.MessagesTable.COLUMN_IS_READ) != 0
                         )
                     )
                 }
@@ -629,5 +631,29 @@ class SQLiteMessengerRepository(
         }
 
         return result
+    }
+
+    override fun readRoomMessages(room: Room) {
+        try {
+            connection = DriverManager.getConnection(databaseUrl)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            statement.use {
+                it.execute(
+                    "update ${SQLiteContract.MessagesTable.TABLE_NAME} " +
+                        "set (${SQLiteContract.MessagesTable.COLUMN_IS_READ}) = 1 " +
+                        "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}=('${securityUtils.bytesToString(room.token)}');"
+                )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
     }
 }
