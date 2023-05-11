@@ -385,7 +385,7 @@ class HttpResponse(
     }
 
     private fun getImageByUri(uri: String): ByteArray {
-        val image = File(uri)
+        val image = File(Repository.IMAGES_DIRECTORY + uri)
         if (image.exists()) {
             val imageIo = ImageIO.read(image)
             val byteArrayOutputStream = ByteArrayOutputStream()
@@ -431,8 +431,8 @@ class HttpResponse(
                 messengerRepository.addMessage(
                     Message(
                         room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
-                        image = "${Repository.IMAGES_DIRECTORY}$fileName",
-                        value = "${Repository.IMAGES_DIRECTORY}$fileName"
+                        image = fileName,
+                        value = fileName
                             .encodeToByteArray(),
                         owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
                         from = SecurityUtilsImpl().bytesToString(body.owner),
@@ -441,12 +441,12 @@ class HttpResponse(
                     )
                 )
             } else {
-                return gson.toJson(AddImageResponseBody("${Repository.IMAGES_DIRECTORY}$fileName".encodeToByteArray()))
+                return gson.toJson(AddImageResponseBody(fileName.encodeToByteArray()))
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return gson.toJson(AddImageResponseBody("${Repository.IMAGES_DIRECTORY}$fileName".encodeToByteArray()))
+        return gson.toJson(AddImageResponseBody(fileName.encodeToByteArray()))
     }
 
     /**
