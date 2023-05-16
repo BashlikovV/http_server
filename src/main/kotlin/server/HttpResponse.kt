@@ -9,13 +9,9 @@ import database.entities.Room
 import database.entities.User
 import server.entities.*
 import utils.SecurityUtilsImpl
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.FileNotFoundException
+import java.io.*
 import java.nio.ByteBuffer
 import java.util.*
-import javax.imageio.ImageIO
 
 class HttpResponse(
     databaseUrl: String = SQLiteContract.MESSENGER_SQLITE_DATABASE_URL
@@ -367,6 +363,9 @@ class HttpResponse(
                 request.body,
                 DeleteMessageRequestBody::class.java
             )
+
+            deleteImage(body.message.image)
+
             messengerRepository.deleteMessage(body.message)
             gson.toJson(DeleteMessageResponseBody("200 OK"))
         } catch (e: Exception) {
@@ -387,9 +386,9 @@ class HttpResponse(
     private fun getImageByUri(uri: String): ByteArray {
         val image = File(Repository.IMAGES_DIRECTORY + uri)
         if (image.exists()) {
-            val imageIo = ImageIO.read(image)
+            val imageIo = FileInputStream(image)
             val byteArrayOutputStream = ByteArrayOutputStream()
-            ImageIO.write(imageIo, "jpg", byteArrayOutputStream)
+            byteArrayOutputStream.write(imageIo.readBytes())
             byteArrayOutputStream.flush()
             val size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array()
             return size + byteArrayOutputStream.toByteArray()
@@ -422,11 +421,8 @@ class HttpResponse(
             val file = File(
                 "${Repository.IMAGES_DIRECTORY}$fileName"
             )
-            ImageIO.write(
-                ImageIO.read(ByteArrayInputStream(body.image)),
-                "jpg",
-                file
-            )
+            file.createNewFile()
+            FileOutputStream(file).write(ByteArrayInputStream(body.image).readBytes())
             if (!body.owner.decodeToString().contains("@")) {
                 messengerRepository.addMessage(
                     Message(
@@ -485,5 +481,15 @@ class HttpResponse(
         }
 
         return result
+    }
+
+    private fun deleteImage(image: String) {
+        if (image != "no image" && image.isNotEmpty()) {
+            try {
+                File(Repository.IMAGES_DIRECTORY + image).delete()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }
