@@ -46,7 +46,7 @@ class Server(
 
     inner class ClientHandler(
         private val socket: Socket
-    ) : Thread(), Runnable {
+    ) : Thread() {
 
         init {
             start()
@@ -94,7 +94,11 @@ class Server(
                     println(System.currentTimeMillis() - time)
                 }
 
-                val request = HttpRequest(builder.toString(), false)
+                val str = builder.toString()
+                if (str == ByteArray(BUFFER_SIZE, init = { 0 }).decodeToString()) {
+                    continue
+                }
+                val request = HttpRequest(str, false)
                 val response = HttpResponse(databaseUrl)
 
                 if (handler != null) {
