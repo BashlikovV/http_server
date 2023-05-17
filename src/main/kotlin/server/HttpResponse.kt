@@ -1,23 +1,28 @@
 package server
 
-import Repository
 import com.google.gson.GsonBuilder
 import database.SQLiteContract
-import database.SQLiteMessengerRepository
-import database.entities.Message
-import database.entities.Room
-import database.entities.User
+import model.accounts.AccountsRepository
+import model.accounts.SQLiteAccountsRepository
+import model.messages.MessagesRepository
+import model.messages.SQLiteMessagesRepository
+import model.rooms.RoomsRepository
+import model.rooms.SQLiteRoomsRepository
+import model.users.SQLiteUsersRepository
+import model.users.UsersRepository
 import server.entities.*
-import utils.SecurityUtilsImpl
-import java.io.*
-import java.nio.ByteBuffer
-import java.util.*
 
 class HttpResponse(
     databaseUrl: String = SQLiteContract.MESSENGER_SQLITE_DATABASE_URL
 ) {
 
-    private val messengerRepository = SQLiteMessengerRepository(databaseUrl)
+    private val accountsRepository: AccountsRepository = SQLiteAccountsRepository(databaseUrl)
+
+    private val messagesRepository: MessagesRepository = SQLiteMessagesRepository(databaseUrl)
+
+    private val roomsRepository: RoomsRepository = SQLiteRoomsRepository(databaseUrl)
+
+    private val usersRepository: UsersRepository = SQLiteUsersRepository(databaseUrl)
 
     private val gson = GsonBuilder().setLenient().create()
 
@@ -74,22 +79,11 @@ class HttpResponse(
      * }
      * */
     fun handleSignUpRequest(request: HttpRequest): String {
-        return try {
-            val body = gson.fromJson(
-                request.body,
-                SignUpRequestBody::class.java
-            )
-
-            messengerRepository.signUp(
-                email = body.email,
-                username = body.username,
-                password = body.password,
-                imageUri = body.image
-            )
-            gson.toJson(SignInResponseBody("200 OK"))
-        } catch (e: Exception) {
-            gson.toJson(SignInResponseBody("500 ERROR"))
-        }
+        val body = gson.fromJson(
+            request.body,
+            SignUpRequestBody::class.java
+        )
+        return gson.toJson(accountsRepository.signUp(body))
     }
 
     /**
@@ -100,21 +94,11 @@ class HttpResponse(
      * }
      * */
     fun handleSignInRequest(request: HttpRequest): String {
-        return try {
-            val body = gson.fromJson(
-                request.body,
-                SignInRequestBody::class.java
-            )
-
-            val user = messengerRepository.signIn(
-                email = body.email,
-                password = body.password
-            )
-            val token = messengerRepository.securityUtils.bytesToString(user.token)
-            gson.toJson(SignInResponseBody(token))
-        } catch (e: Exception) {
-            gson.toJson(SignInResponseBody("500 ERROR"))
-        }
+        val body = gson.fromJson(
+            request.body,
+            SignInRequestBody::class.java
+        )
+        return gson.toJson(accountsRepository.signIn(body))
     }
 
     /**
@@ -124,22 +108,11 @@ class HttpResponse(
      * }
      * */
     fun handleGetRoomMessagesRequest(request: HttpRequest): String {
-        var result = ""
-
-        try {
-            val body = gson.fromJson(
-                request.body,
-                RoomMessagesRequestBody::class.java
-            )
-
-            val room = messengerRepository.getRoomByToken(body.room)
-            val messages = messengerRepository.getMessagesByRoom(room, body.pagination)
-
-            result = gson.toJson(RoomMessagesResponseBody(messages, messages.count { !it.isRead }))
-        } catch (e: Exception) {
-            gson.toJson(RoomMessagesResponseBody(listOf(), 0))
-        }
-        return result
+        val body = gson.fromJson(
+            request.body,
+            RoomMessagesRequestBody::class.java
+        )
+        return gson.toJson(messagesRepository.getRoomMessages(body))
     }
 
     /**
@@ -149,23 +122,11 @@ class HttpResponse(
      * }
      * */
     fun handleGetRoomsRequest(request: HttpRequest): String {
-        var result = ""
-
-        try {
-            val body = gson.fromJson(
-                request.body,
-                GetRoomsRequestBody::class.java
-            )
-
-            val user = messengerRepository.getUserByToken(body.user)
-
-            val rooms = messengerRepository.getRoomsByUser(user)
-            result = gson.toJson(GetRoomsResponseBody(rooms))
-        } catch (e: Exception) {
-            gson.toJson(GetRoomsResponseBody(listOf()))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            GetRoomsRequestBody::class.java
+        )
+        return gson.toJson(roomsRepository.getRooms(body))
     }
 
     /**
@@ -176,24 +137,11 @@ class HttpResponse(
      * }
      * */
     fun handleAddRoomRequest(request: HttpRequest): String {
-
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                AddRoomRequestBody::class.java
-            )
-
-            val user1 = messengerRepository.getUserByToken(body.user1)
-            val user2 = messengerRepository.getUserByToken(body.user2)
-
-            val token = messengerRepository.addRoomByTwoUsers(user1, user2)
-
-            gson.toJson(AddRoomResponseBody(token = SecurityUtilsImpl().bytesToString(token)))
-        } catch (e: Exception) {
-            gson.toJson(AddRoomResponseBody("ERROR"))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            AddRoomRequestBody::class.java
+        )
+        return gson.toJson(roomsRepository.addRoom(body))
     }
 
     /**
@@ -208,48 +156,18 @@ class HttpResponse(
      * }
      * */
     fun handleAddMessageRequest(request: HttpRequest): String {
-        var result: String
-
-        try {
-            val body = gson.fromJson(
-                request.body,
-                AddMessageRequestBody::class.java
-            )
-
-            val user1 = messengerRepository.getUserByToken(body.owner)
-            val user2 = messengerRepository.getUserByToken(body.receiver)
-            val room = messengerRepository.getRoomByTwoUsers(user1, user2)
-
-            messengerRepository.addMessage(
-                Message(
-                    room = room,
-                    image = body.image,
-                    value = body.value.encodeToByteArray(),
-                    file = body.file,
-                    time = Calendar.getInstance().time.toString(),
-                    owner = messengerRepository.getUserByToken(body.owner),
-                    from = body.from
-                )
-            )
-            result = gson.toJson(AddMessageResponseBody("200 OK"))
-        } catch (e: Exception) {
-            result = gson.toJson(AddMessageResponseBody("500 ERROR"))
-        }
-
-        return  result
+        val body = gson.fromJson(
+            request.body,
+            AddMessageRequestBody::class.java
+        )
+        return gson.toJson(messagesRepository.addMessage(body))
     }
 
     /**
      * POST /get-users
      * */
     fun handleGetAllUsersRequest(): String {
-        val result: String = try {
-            gson.toJson(GetUsersResponseBody(messengerRepository.getAllUsers()))
-        } catch (e: Exception) {
-            gson.toJson(AddMessageResponseBody("ERROR"))
-        }
-
-        return  result
+        return gson.toJson(usersRepository.getAllUsers())
     }
 
     /**
@@ -260,27 +178,11 @@ class HttpResponse(
      * }
      * */
     fun handleDeleteRoomRequest(request: HttpRequest): String {
-        var result: String
-
-        try {
-            val body = gson.fromJson(
-                request.body,
-                DeleteRoomRequestBody::class.java
-            )
-
-            val user1 = messengerRepository.getUserByToken(body.user1)
-            val user2 = messengerRepository.getUserByToken(body.user2)
-
-            messengerRepository.deleteRoomByTwoUsers(
-                user1 = user1,
-                user2 = user2
-            )
-            result = gson.toJson(DeleteRoomResponseBody("200 OK"))
-        } catch (e: Exception) {
-            result = gson.toJson(DeleteRoomResponseBody("ERROR"))
-        }
-
-        return  result
+        val body = gson.fromJson(
+            request.body,
+            DeleteRoomRequestBody::class.java
+        )
+        return gson.toJson(roomsRepository.deleteRoom(body))
     }
 
     /**
@@ -290,18 +192,11 @@ class HttpResponse(
      * }
      * */
     fun handleGetUsernameRequest(request: HttpRequest): String {
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                GetUsernameRequestBody::class.java
-            )
-            val user = messengerRepository.getUserByToken(body.token)
-            gson.toJson(GetUsernameResponseBody(user.username))
-        } catch (e: Exception) {
-            gson.toJson(GetUsernameResponseBody("500 ERROR"))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            GetUsernameRequestBody::class.java
+        )
+        return gson.toJson(usersRepository.getUsername(body))
     }
 
     /**
@@ -312,21 +207,11 @@ class HttpResponse(
      * }
      * */
     fun handleGetRoomRequest(request: HttpRequest): String {
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                GetRoomRequestBody::class.java
-            )
-
-            val user1 = messengerRepository.getUserByToken(body.user1)
-            val user2 = messengerRepository.getUserByToken(body.user2)
-            val room = messengerRepository.getRoomByTwoUsers(user1, user2)
-            gson.toJson(GetRoomResponseBody(room))
-        } catch (e: Exception) {
-            gson.toJson(GetRoomResponseBody(Room()))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            GetRoomRequestBody::class.java
+        )
+        return gson.toJson(roomsRepository.getRoom(body))
     }
 
     /**
@@ -336,19 +221,11 @@ class HttpResponse(
      * }
      * */
     fun handleGetUserRequest(request: HttpRequest): String {
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                GetUserRequestBody::class.java
-            )
-            gson.toJson(GetUserResponseBody(
-                user = messengerRepository.getUserByToken(body.token)
-            ))
-        } catch (e: Exception) {
-            gson.toJson(GetUserResponseBody(User()))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            GetUserRequestBody::class.java
+        )
+        return gson.toJson(usersRepository.getUser(body))
     }
 
     /**
@@ -358,21 +235,11 @@ class HttpResponse(
      * }
      * */
     fun handleDeleteMessageRequest(request: HttpRequest): String {
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                DeleteMessageRequestBody::class.java
-            )
-
-            deleteImage(body.message.image)
-
-            messengerRepository.deleteMessage(body.message)
-            gson.toJson(DeleteMessageResponseBody("200 OK"))
-        } catch (e: Exception) {
-            gson.toJson(DeleteMessageResponseBody("500 ERROR"))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            DeleteMessageRequestBody::class.java
+        )
+        return gson.toJson(messagesRepository.deleteMessage(body))
     }
 
     /**
@@ -380,21 +247,7 @@ class HttpResponse(
      * */
     fun handleGetImageRequest(request: HttpRequest): ByteArray {
         val imgUri = request.url.substringAfter("?")
-        return getImageByUri(imgUri)
-    }
-
-    private fun getImageByUri(uri: String): ByteArray {
-        val image = File(Repository.IMAGES_DIRECTORY + uri)
-        if (image.exists()) {
-            val imageIo = FileInputStream(image)
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            byteArrayOutputStream.write(imageIo.readBytes())
-            byteArrayOutputStream.flush()
-            val size = ByteBuffer.allocate(4).putInt(byteArrayOutputStream.size()).array()
-            return size + byteArrayOutputStream.toByteArray()
-        } else {
-            throw FileNotFoundException()
-        }
+        return messagesRepository.getImage(imageUri = imgUri)
     }
 
     /**
@@ -411,38 +264,7 @@ class HttpResponse(
             request.body,
             AddImageRequestBody::class.java
         )
-        val fileName = if (body.owner.decodeToString().contains("@")) {
-            "${body.owner.decodeToString()}.jpg"
-        } else {
-            "image${messengerRepository.getMaxId() + 1}.jpg"
-        }
-        messengerRepository.addImage(fileName)
-        try {
-            val file = File(
-                "${Repository.IMAGES_DIRECTORY}$fileName"
-            )
-            file.createNewFile()
-            FileOutputStream(file).write(ByteArrayInputStream(body.image).readBytes())
-            if (!body.owner.decodeToString().contains("@")) {
-                messengerRepository.addMessage(
-                    Message(
-                        room = messengerRepository.getRoomByToken(SecurityUtilsImpl().bytesToString(body.room)),
-                        image = fileName,
-                        value = fileName
-                            .encodeToByteArray(),
-                        owner = messengerRepository.getUserByToken(SecurityUtilsImpl().bytesToString(body.owner)),
-                        from = SecurityUtilsImpl().bytesToString(body.owner),
-                        time = Calendar.getInstance().time.toString(),
-                        file = "no file".encodeToByteArray()
-                    )
-                )
-            } else {
-                return gson.toJson(AddImageResponseBody(fileName.encodeToByteArray()))
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return gson.toJson(AddImageResponseBody(fileName.encodeToByteArray()))
+        return gson.toJson(messagesRepository.addImage(body))
     }
 
     /**
@@ -453,43 +275,18 @@ class HttpResponse(
      * }
      * */
     fun handleUpdateUsernameRequest(request: HttpRequest): String {
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                UpdateUsernameRequestBody::class.java
-            )
-            messengerRepository.updateUsernameByToken(body.token, body.newName)
-            gson.toJson(DeleteMessageResponseBody("200 OK"))
-        } catch (e: Exception) {
-            gson.toJson(DeleteMessageResponseBody("500 ERROR"))
-        }
-
-        return result
+        val body = gson.fromJson(
+            request.body,
+            UpdateUsernameRequestBody::class.java
+        )
+        return gson.toJson(usersRepository.updateUsername(body))
     }
 
     fun handleReadMessagesRequest(request: HttpRequest): String {
-        val result: String = try {
-            val body = gson.fromJson(
-                request.body,
-                ReadMessagesRequestBody::class.java
-            )
-            val room = messengerRepository.getRoomByToken(body.room)
-            messengerRepository.readRoomMessages(room)
-            gson.toJson(DeleteMessageResponseBody("200 OK"))
-        } catch (e: Exception) {
-            gson.toJson(DeleteMessageResponseBody("500 ERROR"))
-        }
-
-        return result
-    }
-
-    private fun deleteImage(image: String) {
-        if (image != "no image" && image.isNotEmpty()) {
-            try {
-                File(Repository.IMAGES_DIRECTORY + image).delete()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
+        val body = gson.fromJson(
+            request.body,
+            ReadMessagesRequestBody::class.java
+        )
+        return gson.toJson(messagesRepository.readMessages(body))
     }
 }
