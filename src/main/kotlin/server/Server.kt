@@ -83,7 +83,8 @@ class Server(
 
                     keepReading = readResult == BUFFER_SIZE
                 }
-                val charBuffer = StandardCharsets.UTF_8.decode(clearInput.toByteArray().toByteString().asByteBuffer())
+                val charBuffer = clearInput.toByteArray().decodeToString()
+//                val charBuffer = StandardCharsets.UTF_8.decode(clearInput.toByteArray().toByteString().asByteBuffer())
                 builder.append(charBuffer)
                 clearInput.reset()
 
