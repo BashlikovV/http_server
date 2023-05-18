@@ -2,15 +2,14 @@ package server
 
 import Repository
 import database.SQLiteContract
-import okio.ByteString.Companion.toByteString
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicInteger
 
 class Server(
     private val ip: String = Repository.IP_ADDRESS,
@@ -20,6 +19,8 @@ class Server(
 ) {
 
     private lateinit var server : ServerSocket
+
+    private var count = AtomicInteger(0)
 
     companion object {
         private const val BUFFER_SIZE = 256
@@ -31,7 +32,7 @@ class Server(
             server.bind(InetSocketAddress(ip, port))
             while (true) {
                 val socket = server.accept()
-                ClientHandler(socket)
+                ClientHandler(socket).start()
             }
         } catch (e: IOException) {
             e.printStackTrace()
@@ -49,7 +50,7 @@ class Server(
     ) : Thread() {
 
         init {
-            start()
+            count.incrementAndGet()
         }
 
         override fun run() {
@@ -62,42 +63,50 @@ class Server(
             while (!socket.isClosed) {
                 val buffer = ByteArray(BUFFER_SIZE)
                 val builder = StringBuilder()
+                val clearInput = ByteArrayOutputStream()
                 var keepReading = true
+
+//                while (keepReading) {
+//                    val readResult = inputStream.read(buffer)
+//
+//                    keepReading = readResult == BUFFER_SIZE
+//                    val charBuffer = StandardCharsets.UTF_8.decode(buffer.toByteString().asByteBuffer())
+//                    builder.append(charBuffer)
+//                    buffer.fill(0)
+//                }
 
                 while (keepReading) {
                     val readResult = inputStream.read(buffer)
+                    clearInput.write(buffer, 0, readResult)
 
                     keepReading = readResult == BUFFER_SIZE
-                    val charBuffer = StandardCharsets.UTF_8.decode(buffer.toByteString().asByteBuffer())
-                    builder.append(charBuffer)
-                    buffer.fill(0)
                 }
+                val charBuffer = clearInput.toByteArray().decodeToString()
+//                val charBuffer = StandardCharsets.UTF_8.decode(clearInput.toByteArray().toByteString().asByteBuffer())
+                builder.append(charBuffer)
+                clearInput.reset()
 
                 if (builder.toString().contains("multipart/mixed")) {
                     val time = System.currentTimeMillis()
                     val tmp = HttpRequest(builder.toString(), true)
                     val size = tmp.headers["Content-Length"]!!.toInt() - tmp.length
                     val bytes = ByteArray(262144)
-                    val value = ByteArrayOutputStream()
                     var readSize = 0
                     while (readSize < size) {
                         val count = inputStream.read(bytes)
                         if (count > 0) {
-                            value.write(bytes, 0, count)
+                            clearInput.write(bytes, 0, count)
                             readSize += count
                         }
                     }
                     builder.apply {
-                        append(value.toByteArray().decodeToString().substringBeforeLast("}"))
+                        append(clearInput.toByteArray().decodeToString().substringBeforeLast("}"))
                         append("}")
                     }
                     println(System.currentTimeMillis() - time)
                 }
 
                 val str = builder.toString()
-                if (str == ByteArray(BUFFER_SIZE, init = { 0 }).decodeToString()) {
-                    continue
-                }
                 val request = HttpRequest(str, false)
                 val response = HttpResponse(databaseUrl)
 
@@ -112,7 +121,7 @@ class Server(
                                 e.printStackTrace()
                             } finally {
                                 stream.run {
-                                    flush()
+//                                    flush()
                                     close()
                                 }
                                 this.interrupt()
@@ -143,10 +152,12 @@ class Server(
                 if (request.method != HttpMethod.GET) {
                     stream.write(response.getBytes())
                 }
-                stream.flush()
+//                stream.flush()
                 stream.close()
                 socket.close()
             }
+            count.decrementAndGet()
+            println(count.get())
             this.interrupt()
         }
     }

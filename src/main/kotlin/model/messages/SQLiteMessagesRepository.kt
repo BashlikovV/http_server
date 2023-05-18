@@ -69,12 +69,13 @@ class SQLiteMessagesRepository(
     }
 
     override fun addImage(body: AddImageRequestBody): AddImageResponseBody {
+        val fileName = if (body.owner.decodeToString().contains("@")) {
+            "${body.owner.decodeToString()}.jpg"
+        } else {
+            "image${messengerRepository.getMaxId() + 1}.jpg"
+        }
+
         return try {
-            val fileName = if (body.owner.decodeToString().contains("@")) {
-                "${body.owner.decodeToString()}.jpg"
-            } else {
-                "image${messengerRepository.getMaxId() + 1}.jpg"
-            }
             messengerRepository.addImage(fileName)
 
             val file = File(
@@ -100,7 +101,7 @@ class SQLiteMessagesRepository(
             AddImageResponseBody(fileName.encodeToByteArray())
         } catch (e: Exception) {
             e.printStackTrace()
-            AddImageResponseBody("".encodeToByteArray())
+            AddImageResponseBody(fileName.encodeToByteArray())
         }
     }
 
