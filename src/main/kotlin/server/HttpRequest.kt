@@ -40,13 +40,7 @@ class HttpRequest(
         this.headers = Collections.unmodifiableMap(map)
 
         this.body = if (parts.size > 1) {
-            try {
-                String(
-                    parts.last().toByteArray().filter { it != 0.toByte() }.toByteArray()
-                )
-            } catch (_: Exception) {
-                ""
-            }
+            String(parts.last().toByteArray())
         } else {
             ""
         }
