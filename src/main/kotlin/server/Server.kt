@@ -4,12 +4,13 @@ import Repository
 import database.SQLiteContract
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeoutException
-import java.util.concurrent.atomic.AtomicInteger
 
 class Server(
     private val ip: String = Repository.IP_ADDRESS,
@@ -18,9 +19,7 @@ class Server(
     private val handler: HttpHandler?
 ) {
 
-    private lateinit var server : ServerSocket
-
-    private var count = AtomicInteger(0)
+    private lateinit var server: ServerSocket
 
     companion object {
         private const val BUFFER_SIZE = 256
@@ -50,115 +49,120 @@ class Server(
     ) : Thread() {
 
         init {
-            count.incrementAndGet()
+            socket.soTimeout = 2500
         }
 
         override fun run() {
             super.run()
+            val time = System.currentTimeMillis()
             println("New client connection")
 
-            val stream = socket.getOutputStream()
+            val outputStream = socket.getOutputStream()
             val inputStream = socket.getInputStream()
 
-            while (!socket.isClosed) {
-                val buffer = ByteArray(BUFFER_SIZE)
-                val builder = StringBuilder()
-                val clearInput = ByteArrayOutputStream()
-                var keepReading = true
+            var builder = inputStream.readData()
 
-//                while (keepReading) {
-//                    val readResult = inputStream.read(buffer)
-//
-//                    keepReading = readResult == BUFFER_SIZE
-//                    val charBuffer = StandardCharsets.UTF_8.decode(buffer.toByteString().asByteBuffer())
-//                    builder.append(charBuffer)
-//                    buffer.fill(0)
-//                }
-
-                while (keepReading) {
-                    val readResult = inputStream.read(buffer)
-                    clearInput.write(buffer, 0, readResult)
-
-                    keepReading = readResult == BUFFER_SIZE
-                }
-                val charBuffer = clearInput.toByteArray().decodeToString()
-//                val charBuffer = StandardCharsets.UTF_8.decode(clearInput.toByteArray().toByteString().asByteBuffer())
-                builder.append(charBuffer)
-                clearInput.reset()
-
-                if (builder.toString().contains("multipart/mixed")) {
-                    val time = System.currentTimeMillis()
-                    val tmp = HttpRequest(builder.toString(), true)
-                    val size = tmp.headers["Content-Length"]!!.toInt() - tmp.length
-                    val bytes = ByteArray(262144)
-                    var readSize = 0
-                    while (readSize < size) {
-                        val count = inputStream.read(bytes)
-                        if (count > 0) {
-                            clearInput.write(bytes, 0, count)
-                            readSize += count
-                        }
-                    }
-                    builder.apply {
-                        append(clearInput.toByteArray().decodeToString().substringBeforeLast("}"))
-                        append("}")
-                    }
-                    println(System.currentTimeMillis() - time)
-                }
-
-                val str = builder.toString()
-                val request = HttpRequest(str, false)
-                val response = HttpResponse(databaseUrl)
-
-                if (handler != null) {
-                    try {
-                        if (request.method == HttpMethod.GET) {
-                            try {
-                                WebSocketHandlerImpl().handle(request, response).let {
-                                    stream.write(it)
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            } finally {
-                                stream.run {
-//                                    flush()
-                                    close()
-                                }
-                                this.interrupt()
-                            }
-                        } else {
-                            val body = handler.handle(request, response)
-
-                            if (!body.isNullOrBlank()) {
-                                if (response.headers["Content-Type"] == null) {
-                                    response.addHeader("Content-Type", "application/json; charset=utf-8")
-                                }
-                                response.setBody(body)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-
-                        response.statusCode = 500
-                        response.status = "Internal server error"
-                        response.addHeader("Content-Type", "application/json; charset=utf-8")
-                    }
-                } else {
-                    response.statusCode = 404
-                    response.status = "Not found"
-                    response.addHeader("Content-Type", "application/json; charset=utf-8")
-                }
-
-                if (request.method != HttpMethod.GET) {
-                    stream.write(response.getBytes())
-                }
-//                stream.flush()
-                stream.close()
-                socket.close()
+            if (builder.toString().contains("multipart/mixed")) {
+                builder = inputStream.readMultipartBody(builder)
             }
-            count.decrementAndGet()
-            println(count.get())
-            this.interrupt()
+
+            val request = HttpRequest(builder.toString())
+            val response = HttpResponse(databaseUrl)
+
+            response.handleRequests(request, outputStream)
+
+            if (request.method != HttpMethod.GET) {
+                outputStream.write(response.getBytes())
+            }
+
+            println(System.currentTimeMillis() - time)
+            interrupt()
+        }
+
+        private fun InputStream.readData(): StringBuilder {
+            val buffer = ByteArray(BUFFER_SIZE)
+            val builder = StringBuilder()
+            val clearInput = ByteArrayOutputStream()
+            var keepReading = true
+
+            while (keepReading) {
+                var rbCount = read(buffer)
+
+                while (rbCount == -1) {
+                    yield()
+                    rbCount = read(buffer)
+                }
+
+                clearInput.write(buffer, 0, rbCount)
+                keepReading = rbCount == BUFFER_SIZE
+            }
+            val charBuffer = clearInput.toByteArray().decodeToString()
+            builder.append(charBuffer)
+
+            return builder
+        }
+
+        private fun InputStream.readMultipartBody(builder: StringBuilder): StringBuilder {
+            val tmp = HttpRequest(builder.toString())
+            val size = tmp.headers["Content-Length"]!!.toInt() - tmp.length
+            val clearInput = ByteArrayOutputStream()
+            val bytes = ByteArray(262144)
+            var readSize = 0
+
+            while (readSize < size) {
+                val count = read(bytes)
+                if (count > 0) {
+                    clearInput.write(bytes, 0, count)
+                    readSize += count
+                }
+            }
+            builder.apply {
+                append(clearInput.toByteArray().decodeToString().substringBeforeLast("}"))
+                append("}")
+            }
+
+            return builder
+        }
+
+        private fun OutputStream.handleGetRequests(request: HttpRequest, response: HttpResponse) {
+            try {
+                write(WebSocketHandlerImpl().handle(request, response))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                interrupt()
+            }
+        }
+
+        private fun HttpResponse.handleRequests(request: HttpRequest, outputStream: OutputStream) {
+            if (handler != null) {
+                try {
+                    if (request.method == HttpMethod.GET) {
+                        outputStream.handleGetRequests(request, this)
+                    } else {
+                        val body = handler.handle(request, this)
+
+                        if (!body.isNullOrBlank()) {
+                            if (this.headers["Content-Type"] == null) {
+                                this.addHeader("Content-Type", "application/json; charset=utf-8")
+                            }
+                            this.setBody(body)
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+
+                    this.statusCode = 500
+                    this.status = "Internal server error"
+                    this.addHeader("Content-Type", "application/json; charset=utf-8")
+                }
+            } else {
+                this.statusCode = 404
+                this.status = "Not found"
+                this.addHeader("Content-Type", "application/json; charset=utf-8")
+            }
+
+//            return this
         }
     }
 }

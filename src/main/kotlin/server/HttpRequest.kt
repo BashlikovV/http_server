@@ -1,11 +1,8 @@
 package server
 
-import java.util.Collections
+import java.util.*
 
-class HttpRequest(
-    message: String,
-    isMultipartBody: Boolean
-) {
+class HttpRequest(message: String) {
 
     val method: HttpMethod
     val url: String
@@ -22,11 +19,7 @@ class HttpRequest(
     init {
         val parts = message.split(DELIMITER)
         length = parts.sumOf { it.length }
-        val head = if (isMultipartBody) {
-            parts.first() + parts[1]
-        } else {
-            parts.first()
-        }
+        val head = parts.first()
         val headers = head.split(NEW_LINE)
         val firstLine = headers.first().split(" ")
         method = HttpMethod.valueOf(firstLine[0])
