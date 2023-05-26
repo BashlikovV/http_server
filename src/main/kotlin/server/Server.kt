@@ -106,14 +106,14 @@ class Server(
             val tmp = HttpRequest(builder.toString())
             val size = tmp.headers["Content-Length"]!!.toInt() - tmp.length
             val clearInput = ByteArrayOutputStream()
-            val bytes = ByteArray(262144)
+            val buffer = ByteArray(262144)
             var readSize = 0
 
             while (readSize < size) {
-                val count = read(bytes)
-                if (count > 0) {
-                    clearInput.write(bytes, 0, count)
-                    readSize += count
+                val rbCount = read(buffer)
+                if (rbCount > 0) {
+                    clearInput.write(buffer, 0, rbCount)
+                    readSize += rbCount
                 }
             }
             builder.apply {
@@ -161,8 +161,6 @@ class Server(
                 this.status = "Not found"
                 this.addHeader("Content-Type", "application/json; charset=utf-8")
             }
-
-//            return this
         }
     }
 }
