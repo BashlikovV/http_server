@@ -12,4 +12,6 @@ interface UsersRepository {
     fun getUser(body: GetUserRequestBody): GetUserResponseBody
 
     fun updateUsername(body: UpdateUsernameRequestBody): UpdateUsernameResponseBody
+
+    fun checkUserToken(token: String): Boolean
 }
