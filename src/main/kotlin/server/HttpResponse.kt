@@ -289,4 +289,10 @@ class HttpResponse(
         )
         return gson.toJson(messagesRepository.readMessages(body))
     }
+
+    fun checkToken(token: String?) = if (token != null) {
+        usersRepository.checkUserToken(token)
+    } else {
+        false
+    }
 }
