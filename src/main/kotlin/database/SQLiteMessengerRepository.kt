@@ -179,6 +179,7 @@ class SQLiteMessengerRepository(
             }
         } catch (e: SQLException) {
             e.printStackTrace()
+            throw AuthException().initCause(e)
         } finally {
             try {
                 connection.close()

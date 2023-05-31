@@ -50,4 +50,14 @@ class SQLiteUsersRepository(
             UpdateUsernameResponseBody("500 ERROR")
         }
     }
+
+    override fun checkUserToken(token: String): Boolean {
+        return try {
+            messengerRepository.getUserByToken(token)
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }

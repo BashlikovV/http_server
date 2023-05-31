@@ -139,7 +139,7 @@ class Server(
                 try {
                     if (request.method == HttpMethod.GET) {
                         outputStream.handleGetRequests(request, this)
-                    } else {
+                    } else if (checkToken(request.headers["User-Token"]) || request.headers.containsKey("SignIn")) {
                         val body = handler.handle(request, this)
 
                         if (!body.isNullOrBlank()) {
