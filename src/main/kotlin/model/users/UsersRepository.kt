@@ -1,6 +1,5 @@
 package model.users
 
-import server.HttpRequest
 import server.entities.*
 
 interface UsersRepository {
