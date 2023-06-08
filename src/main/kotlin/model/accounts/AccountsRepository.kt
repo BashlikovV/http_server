@@ -1,6 +1,5 @@
 package model.accounts
 
-import server.HttpRequest
 import server.entities.SignInRequestBody
 import server.entities.SignInResponseBody
 import server.entities.SignUpRequestBody
