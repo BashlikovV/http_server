@@ -1,14 +1,16 @@
 package database.entities
 
+import com.google.gson.annotations.SerializedName
+
 data class Message(
-    val room: Room = Room(),
-    val image: String = "",
-    val value: ByteArray = byteArrayOf(),
-    val file: ByteArray = byteArrayOf(),
-    val owner: User = User(),
-    val time: String = "",
-    val from: String = "",
-    val isRead: Boolean = true
+    @SerializedName("room") val room: Room = Room(),
+    @SerializedName("image") val image: String = "",
+    @SerializedName("value") val value: ByteArray = byteArrayOf(),
+    @SerializedName("file") val file: ByteArray = byteArrayOf(),
+    @SerializedName("owner") val owner: User = User(),
+    @SerializedName("time") val time: String = "",
+    @SerializedName("from") val from: String = "",
+    @SerializedName("isRead") val isRead: Boolean = true
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
