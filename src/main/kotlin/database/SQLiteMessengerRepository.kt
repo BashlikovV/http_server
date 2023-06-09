@@ -215,8 +215,14 @@ class SQLiteMessengerRepository(
         }
     }
 
-    override fun getAllUsers(): List<User> {
+    override fun getAllUsers(token: String): List<User> {
         val result = mutableListOf<User>()
+        val userRooms = getRoomsByUser(getUserByToken(token))
+        val tokensList = userRooms.map {
+            securityUtils.bytesToString(it.user1.token)
+        } + userRooms.map {
+            securityUtils.bytesToString(it.user2.token)
+        }
 
         try {
             connection = DriverManager.getConnection(databaseUrl)
@@ -229,12 +235,14 @@ class SQLiteMessengerRepository(
                 )
 
                 while (resultSet.next()) {
+                    val rowToken = resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)
+                    if (tokensList.contains(rowToken)) { continue }
                     result.add(
                         User(
                             id = resultSet.getInt(SQLiteContract.UsersTable.COLUMN_ID),
                             username = resultSet.getString(SQLiteContract.UsersTable.COLUMN_USERNAME),
                             email = resultSet.getString(SQLiteContract.UsersTable.COLUMN_EMAIL),
-                            token = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_TOKEN)),
+                            token = securityUtils.stringToBytes(rowToken),
                             salt = securityUtils.stringToBytes(resultSet.getString(SQLiteContract.UsersTable.COLUMN_SALT)),
                             createdAt = resultSet.getString(SQLiteContract.UsersTable.COLUMN_CREATED_AT),
                             image = resultSet.getString(SQLiteContract.UsersTable.COLUMN_IMAGE).encodeToByteArray()
