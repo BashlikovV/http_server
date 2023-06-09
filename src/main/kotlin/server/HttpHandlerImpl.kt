@@ -22,7 +22,7 @@ class HttpHandlerImpl : HttpHandler {
                 response.handleAddMessageRequest(request = request)
             }
             HttpContract.UrlMethods.GET_USERS -> {
-                response.handleGetAllUsersRequest()
+                response.handleGetAllUsersRequest(request = request)
             }
             HttpContract.UrlMethods.DELETE_ROOM -> {
                 response.handleDeleteRoomRequest(request = request)
