@@ -166,8 +166,12 @@ class HttpResponse(
     /**
      * POST /get-users
      * */
-    fun handleGetAllUsersRequest(): String {
-        return gson.toJson(usersRepository.getAllUsers())
+    fun handleGetAllUsersRequest(request: HttpRequest): String {
+        val body = gson.fromJson(
+            request.body,
+            GetUsersRequestBody::class.java
+        )
+        return gson.toJson(usersRepository.getAllUsers(body.token))
     }
 
     /**

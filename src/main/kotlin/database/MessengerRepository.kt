@@ -29,7 +29,7 @@ interface MessengerRepository {
     /**
      * [getAllUsers] - function for getting all users from database
      * */
-    fun getAllUsers(): List<User>
+    fun getAllUsers(token: String): List<User>
 
     /**
      * [getRoomByTwoUsers] - function for getting room using two users

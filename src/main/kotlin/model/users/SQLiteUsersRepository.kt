@@ -11,9 +11,10 @@ class SQLiteUsersRepository(
 
     private val messengerRepository = SQLiteMessengerRepository(databaseUrl)
 
-    override fun getAllUsers(): GetUsersResponseBody {
+    override fun getAllUsers(token: String): GetUsersResponseBody {
         return try {
-            GetUsersResponseBody(messengerRepository.getAllUsers())
+            if (token.isEmpty()) { throw java.lang.Exception() }
+            GetUsersResponseBody(messengerRepository.getAllUsers(token))
         } catch (e: Exception) {
             e.printStackTrace()
             GetUsersResponseBody(listOf())

@@ -4,7 +4,7 @@ import server.entities.*
 
 interface UsersRepository {
 
-    fun getAllUsers(): GetUsersResponseBody
+    fun getAllUsers(token: String): GetUsersResponseBody
 
     fun getUsername(body: GetUsernameRequestBody): GetUsernameResponseBody
 
