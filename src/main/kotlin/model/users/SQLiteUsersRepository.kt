@@ -55,6 +55,7 @@ class SQLiteUsersRepository(
     override fun checkUserToken(token: String): Boolean {
         return try {
             messengerRepository.getUserByToken(token)
+            messengerRepository.updateLastConnectionTime(token)
             true
         } catch (e: Exception) {
             e.printStackTrace()

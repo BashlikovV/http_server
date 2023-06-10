@@ -153,7 +153,7 @@ class SQLiteMessengerRepository(
     }
 
     override fun getUserByToken(token: String): User {
-        var result = User()
+        var result: User
 
         try {
             connection = DriverManager.getConnection(databaseUrl)
@@ -653,6 +653,32 @@ class SQLiteMessengerRepository(
                     "update ${SQLiteContract.MessagesTable.TABLE_NAME} " +
                         "set (${SQLiteContract.MessagesTable.COLUMN_IS_READ}) = 1 " +
                         "where ${SQLiteContract.MessagesTable.COLUMN_ROOM}=('${securityUtils.bytesToString(room.token)}');"
+                )
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        } finally {
+            try {
+                connection.close()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override fun updateLastConnectionTime(token: String) {
+        try {
+            connection = DriverManager.getConnection(databaseUrl)
+            val statement = connection.createStatement()
+            statement.queryTimeout = 30
+
+            val time = Calendar.getInstance().time.toString()
+
+            statement.use {
+                it.execute(
+                    "update ${SQLiteContract.UsersTable.TABLE_NAME} " +
+                        "set (${SQLiteContract.UsersTable.COLUMN_CREATED_AT}) = ('$time') " +
+                        "where ${SQLiteContract.UsersTable.COLUMN_TOKEN}=('$token');"
                 )
             }
         } catch (e: SQLException) {
