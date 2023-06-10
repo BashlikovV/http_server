@@ -85,4 +85,9 @@ interface MessengerRepository {
     * [readRoomMessages] - mark all messages of room as read
     * */
     fun readRoomMessages(room: Room)
+
+    /**
+     * [updateLastConnectionTime] - update last connection time in table
+     * */
+    fun updateLastConnectionTime(token: String)
 }
