@@ -30,7 +30,7 @@ class SQLiteMessengerRepository(
                 password = password.toCharArray(),
                 salt = salt
             )
-            val time = Calendar.getInstance().time.toString()
+            val time = Calendar.getInstance().time.time
 
             statement.use {
                 it.execute(
@@ -672,7 +672,7 @@ class SQLiteMessengerRepository(
             val statement = connection.createStatement()
             statement.queryTimeout = 30
 
-            val time = Calendar.getInstance().time.toString()
+            val time = Calendar.getInstance().time.time
 
             statement.use {
                 it.execute(

@@ -86,12 +86,9 @@ class Server(
             var keepReading = true
 
             while (keepReading) {
-                var rbCount = read(buffer)
+                val rbCount = read(buffer)
 
-                while (rbCount == -1) {
-                    yield()
-                    rbCount = read(buffer)
-                }
+                if (rbCount == -1) { break }
 
                 clearInput.write(buffer, 0, rbCount)
                 keepReading = rbCount == BUFFER_SIZE
@@ -137,9 +134,15 @@ class Server(
         private fun HttpResponse.handleRequests(request: HttpRequest, outputStream: OutputStream) {
             if (handler != null) {
                 try {
+                    println(request.url)
+                    val token = if (request.headers["User-Token"] == "") {
+                        null
+                    } else {
+                        request.headers["User-Token"]
+                    }
                     if (request.method == HttpMethod.GET) {
                         outputStream.handleGetRequests(request, this)
-                    } else if (checkToken(request.headers["User-Token"]) || request.headers.containsKey("SignIn")) {
+                    } else if (checkToken(token) || request.headers.containsKey("SignIn")) {
                         val body = handler.handle(request, this)
 
                         if (!body.isNullOrBlank()) {
