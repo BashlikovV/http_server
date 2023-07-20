@@ -22,7 +22,7 @@ class HttpRequest(message: String) {
         val head = parts.first()
         val headers = head.split(NEW_LINE)
         val firstLine = headers.first().split(" ")
-        method = HttpMethod.valueOf(firstLine[0])
+        method = HttpMethod.valueOf(firstLine.first())
         url = firstLine[1]
 
         val map = mutableMapOf<String, String>()

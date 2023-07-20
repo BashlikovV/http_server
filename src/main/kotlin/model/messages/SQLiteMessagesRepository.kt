@@ -1,5 +1,6 @@
 package model.messages
 
+import Repository
 import database.SQLiteContract
 import database.SQLiteMessengerRepository
 import database.entities.Message
@@ -54,8 +55,10 @@ class SQLiteMessagesRepository(
 
     override fun deleteMessage(body: DeleteMessageRequestBody): DeleteMessageResponseBody {
         return try {
-            deleteImage(body.message.image)
-            messengerRepository.deleteMessage(body.message)
+            body.messages.forEach { message: Message ->
+                deleteImage(message.image)
+                messengerRepository.deleteMessage(message)
+            }
 
             DeleteMessageResponseBody("200 OK")
         } catch (e: Exception) {
