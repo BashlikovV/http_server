@@ -19,6 +19,8 @@ class Server(
     private val handler: HttpHandler?
 ) {
 
+//    private val pool = Executors.newFixedThreadPool(2)
+
     private lateinit var server: ServerSocket
 
     companion object {
@@ -88,7 +90,9 @@ class Server(
             while (keepReading) {
                 val rbCount = read(buffer)
 
-                if (rbCount == -1) { break }
+                if (rbCount == -1) {
+                    break
+                }
 
                 clearInput.write(buffer, 0, rbCount)
                 keepReading = rbCount == BUFFER_SIZE
@@ -135,14 +139,9 @@ class Server(
             if (handler != null) {
                 try {
                     println(request.url)
-                    val token = if (request.headers["User-Token"] == "") {
-                        null
-                    } else {
-                        request.headers["User-Token"]
-                    }
                     if (request.method == HttpMethod.GET) {
                         outputStream.handleGetRequests(request, this)
-                    } else if (checkToken(token) || request.headers.containsKey("SignIn")) {
+                    } else {
                         val body = handler.handle(request, this)
 
                         if (!body.isNullOrBlank()) {

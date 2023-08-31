@@ -139,9 +139,15 @@ class SQLiteMessengerRepositoryTest {
     @Test
     fun getAllUsersTest() {
         var users: List<User>? = null
+        val userToken = securityUtils.bytesToString(
+            testMessengerRepository.signIn(
+                email = TEST_EMAIL,
+                password = TEST_PASSWORD
+            ).token
+        )
 
         try {
-            users = testMessengerRepository.getAllUsers()
+            users = testMessengerRepository.getAllUsers(userToken)
         } catch (e: Exception) {
             e.printStackTrace()
         }
